@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Transform: AWS::Serverless-2016-10-31
+
+Description: serverless-discord-bot
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+    Tracing: Active # Enables AWS X Ray
+
+Parameters:
+  AppIdentifier:
+    Type: String
+    Description: Primary identifier for this app, used for naming purposes
+  Environment:
+    Type: String
+    Description: Stage Name used in API GW
+  EspAuthToken:
+    Type: String
+    Description: Auth Token required for EskomSePush Business API 2.0
+
+Resources:
+  #####################
+  #     Storage
+  #####################
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: !Sub "${AppIdentifier}v2-${Environment}"
+      Tags:
+        - Key: Project
+          Value: !Ref AppIdentifier
+        - Key: Environment
+          Value: !Ref Environment
+
+  MainSNSTopic:
+    Type: AWS::SNS::Topic
+
+  proxyGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      MethodSettings:
+        - ResourcePath: /
+          HttpMethod: ANY
+
+  proxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/commands/proxy-function.handler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt MainSNSTopic.TopicName
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+            RestApiId: !Ref proxyGateway
+      Environment:
+        Variables:
+          TOPIC_ARN: !Ref MainSNSTopic
+          PUBLIC_KEY: ba19504c256c91e3956390a115182e3a6e82f8d2e00044575fdd59821af6264d
+
+  # SearchAreaLambda:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: src/commands/search/search.handler
+  #     Runtime: nodejs16.x
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Policies:
+  #       - AWSLambdaBasicExecutionRole
+  #     Events:
+  #       SNSEvent:
+  #         Type: SNS
+  #         Properties:
+  #           Topic: !Ref MainSNSTopic
+  #           FilterPolicy:
+  #             command:
+  #               - search
+  #     Environment:
+  #       Variables:
+  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
+  #         S3_ASSET_BUCKET: !Ref S3Bucket
+
+  Searchv2Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Search/
+      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
+      Runtime: dotnet6
+      # Architectures:
+      #   - x86_64
+      # MemorySize: 128
+      # Timeout: 100
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - searchv2
+      Environment:
+        Variables:
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  # InfoLambda:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     # CodeUri: src/commands
+  #     # Handler: info/search.handler
+  #     Handler: src/commands/info/info.handler
+  #     Runtime: nodejs16.x
+  #     Architectures:
+  #       - x86_64
+  #     MemorySize: 128
+  #     Timeout: 100
+  #     Policies:
+  #       - AWSLambdaBasicExecutionRole
+  #     Events:
+  #       SNSEvent:
+  #         Type: SNS
+  #         Properties:
+  #           Topic: !Ref MainSNSTopic
+  #           FilterPolicy:
+  #             command:
+  #               - info
+  #     Environment:
+  #       Variables:
+  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
+  #         S3_ASSET_BUCKET: !Ref S3Bucket
+
+
+Outputs:
+  ProxyGWEndpoint:
+    Description: API Gateway endpoint URL to pass to Discord Application Portal
+    Value: !Sub https://${proxyGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/

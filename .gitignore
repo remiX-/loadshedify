@@ -1,0 +1,6 @@
+.aws-sam/
+.old/
+node_modules
+samconfig.toml
+template.yaml
+.env

@@ -1,0 +1,26 @@
+Resources:
+  Searchv2Lambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Search/
+      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
+      Runtime: dotnet6
+      # Architectures:
+      #   - x86_64
+      # MemorySize: 128
+      # Timeout: 100
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - searchv2
+      Environment:
+        Variables:
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket

@@ -1,7 +1,7 @@
 {
-  "name": "searchv2",
+  "name": "search",
   "type": 1,
-  "description": "Replies with area information for a specific search",
+  "description": "Retrieves area information for a specified search criteria, eg \"/search umhlanga\"",
   "options": [
     {
       "name": "area",

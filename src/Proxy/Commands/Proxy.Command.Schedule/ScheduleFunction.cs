@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon;
-using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.SNSEvents;
@@ -17,15 +16,15 @@ using Proxy.ESP.Api;
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
 
-public class SearchFunction
+public class ScheduleFunction
 {
   private readonly JsonService _jsonService;
   private readonly DiscordHandler _discordClient;
   private readonly IEskomSePushClient _espClient;
 
-  private readonly ILogger<SearchFunction> _logger;
+  private readonly ILogger<ScheduleFunction> _logger;
 
-  public SearchFunction()
+  public ScheduleFunction()
   {
     Console.WriteLine("SearchFunction.ctor");
 
@@ -33,43 +32,70 @@ public class SearchFunction
     {
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
-
-      // AWS
-      // TODO 
-      var endpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"));
-      collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
     });
 
     _jsonService = Shell.Get<JsonService>();
     _discordClient = Shell.Get<DiscordHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
-    _logger = Shell.Get<ILogger<SearchFunction>>();
+    _logger = Shell.Get<ILogger<ScheduleFunction>>();
   }
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
     if (!Validate(request, out var interaction)) return;
 
-    var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
-    var searchResults = await _espClient.SearchByText(searchText);
+    var areaId = interaction.Data.Options[0].Value.ToString()!.Trim();
+    var day = GetDay(interaction.Data.Options);
+    day = "thursday";
+    var searchResults = await _espClient.GetAreaSchedule(areaId);
+    var schedule = searchResults.Schedule.Days.First(d => d.Name.Equals(day, StringComparison.OrdinalIgnoreCase));
 
     var embed = new EmbedBuilder()
-      .WithTitle($"Results for '{searchText}'")
-      .WithDescription($"{searchResults.Areas.Count} results")
-      .WithColor(Color.Blue);
+      .WithTitle($"Stage schedule for ${areaId}")
+      .WithDescription($"Date: ${schedule.Name}, ${schedule.Date}\nRegion: ${searchResults.Info.Region}")
+      .WithColor(Color.DarkOrange);
+
+    for (int stageIndex = 0; stageIndex < schedule.Stages.Count; stageIndex++)
+    {
+      var stage = schedule.Stages[stageIndex];
+      var stageHasSlots = stage.Count > 0;
+      var val = "None";
+
+      if (stageHasSlots)
+      {
+        val = stage.Aggregate((first, next) => $"{first}\n{next}").Replace("-", " - ");
+      }
+
+      embed.AddField($"Stage {stageIndex + 1}", val, inline: true);
+
+      // Add blank every 2 stages to force 2 columns
+      if (stageIndex % 2 == 0) embed.AddField("\u200B", "\u200B", inline: true);
+    }
 
     // TODO reduce number of fields
-    foreach (var (id, name, region) in searchResults.Areas)
-    {
-      embed.AddField("id", name, inline: true);
-      embed.AddField("name", id, inline: true);
-      embed.AddField("region", region, inline: true);
-    }
+    // foreach (var (id, name, region) in searchResults.Areas)
+    // {
+    //   embed.AddField("id", name, inline: true);
+    //   embed.AddField("name", id, inline: true);
+    //   embed.AddField("region", region, inline: true);
+    // }
 
     await _discordClient.Handle(interaction, embed);
 
     _logger.LogInformation("Great success!");
+  }
+
+  private string GetDay(IList<DiscordDataOption> options)
+  {
+    var today = DateTime.Now.DayOfWeek.ToString();
+    if (options.Count < 2)
+    {
+      // no day specified
+      _logger.LogDebug($"No day specified, using today {today}");
+    }
+
+    return today;
   }
 
   private bool Validate(SNSEvent request, out DiscordInteraction interaction)

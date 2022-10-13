@@ -17,15 +17,15 @@ using Proxy.ESP.Api;
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
 
-public class SearchFunction
+public class SubscribeFunction
 {
   private readonly JsonService _jsonService;
   private readonly DiscordHandler _discordClient;
   private readonly IEskomSePushClient _espClient;
 
-  private readonly ILogger<SearchFunction> _logger;
+  private readonly ILogger<SubscribeFunction> _logger;
 
-  public SearchFunction()
+  public SubscribeFunction()
   {
     Console.WriteLine("SearchFunction.ctor");
 
@@ -44,7 +44,7 @@ public class SearchFunction
     _discordClient = Shell.Get<DiscordHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
-    _logger = Shell.Get<ILogger<SearchFunction>>();
+    _logger = Shell.Get<ILogger<SubscribeFunction>>();
   }
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
@@ -52,20 +52,11 @@ public class SearchFunction
     if (!Validate(request, out var interaction)) return;
 
     var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
-    var searchResults = await _espClient.SearchByText(searchText);
 
     var embed = new EmbedBuilder()
-      .WithTitle($"Results for '{searchText}'")
-      .WithDescription($"{searchResults.Areas.Count} results")
-      .WithColor(Color.Blue);
-
-    // TODO reduce number of fields
-    foreach (var (id, name, region) in searchResults.Areas)
-    {
-      embed.AddField("id", name, inline: true);
-      embed.AddField("name", id, inline: true);
-      embed.AddField("region", region, inline: true);
-    }
+      .WithTitle("COMING SOON!")
+      .WithDescription("Watch this space...")
+      .WithColor(Color.DarkPurple);
 
     await _discordClient.Handle(interaction, embed);
 

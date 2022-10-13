@@ -1,0 +1,14 @@
+{
+  "name": "subscribe",
+  "aliases": [ "sub" ],
+  "type": 1,
+  "description": "Subscribes to a given area for live notifications",
+  "options": [
+    {
+      "name": "id",
+      "description": "Id retrieved via /search",
+      "type": 3,
+      "required": true
+    }
+  ]
+}

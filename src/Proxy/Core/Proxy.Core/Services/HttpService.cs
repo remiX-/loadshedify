@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using Proxy.Core.DataModels.Web;
 
 namespace Proxy.Core.Services;
@@ -21,11 +22,20 @@ public class HttpService : IHttpService
 
     if (!response.Success)
     {
-      return new RequestResult<T> { Success = false, Response = response, Error = response.Exception.Message };
+      return new RequestResult<T>
+      {
+        Success = false,
+        Response = response,
+        Error = response.Exception.Message
+      };
     }
 
-    var deserialized = _jsonService.Deserialize<T>(response.Body);
-    return new RequestResult<T> { Success = true, Response = response, Result = deserialized };
+    return new RequestResult<T>
+    {
+      Success = true,
+      Response = response,
+      Result = response.StatusCode == HttpStatusCode.NoContent ? default : _jsonService.Deserialize<T>(response.Body)
+    };
   }
 
   public async Task<IRequestResult<T>> ExecuteAsync<T>(string verb, string url, Dictionary<string, string> headers = null)
@@ -121,6 +131,7 @@ public class HttpService : IHttpService
 
       return new WebExecuteResponse
       {
+        StatusCode = response.StatusCode,
         Success = true,
         Body = await response.Content.ReadAsStringAsync()
       };

@@ -5,6 +5,8 @@ namespace Proxy.DiscordProxy;
 
 public struct DiscordInteraction
 {
+  public bool Dev { get; set; }
+
   [JsonPropertyName("id")]
   public string Id { get; set; }
 

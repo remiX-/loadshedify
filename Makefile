@@ -28,8 +28,8 @@ validate:
 build:
 	sam build \
 		--cached \
-		--parallel \
 		--profile $(profile_name)
+		# --parallel \
 
 deploy:
 	sam deploy \

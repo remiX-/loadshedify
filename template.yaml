@@ -47,15 +47,14 @@ Resources:
         - ResourcePath: /
           HttpMethod: ANY
 
-  proxyFunction:
+  DiscordBotProxyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/commands/proxy-function.handler
-      Runtime: nodejs16.x
-      Architectures:
-        - x86_64
-      MemorySize: 128
-      Timeout: 100
+      FunctionName: !Sub ${AppIdentifier}-DiscordBotProxy
+      PackageType: Zip
+      CodeUri: src/Proxy/Core/Proxy.BotHandler
+      Handler: Proxy.BotHandler::Proxy.BotHandler.BotProxyFunction::FunctionHandler
+      Runtime: dotnet6
       Description: A Lambda function that returns a static string.
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -73,41 +72,14 @@ Resources:
           TOPIC_ARN: !Ref MainSNSTopic
           PUBLIC_KEY: ba19504c256c91e3956390a115182e3a6e82f8d2e00044575fdd59821af6264d
 
-  # SearchAreaLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: src/commands/search/search.handler
-  #     Runtime: nodejs16.x
-  #     Architectures:
-  #       - x86_64
-  #     MemorySize: 128
-  #     Timeout: 100
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
-  #     Events:
-  #       SNSEvent:
-  #         Type: SNS
-  #         Properties:
-  #           Topic: !Ref MainSNSTopic
-  #           FilterPolicy:
-  #             command:
-  #               - search
-  #     Environment:
-  #       Variables:
-  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
-  #         S3_ASSET_BUCKET: !Ref S3Bucket
-
-  Searchv2Lambda:
+  SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${AppIdentifier}-Search
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Search/
       Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
       Runtime: dotnet6
-      # Architectures:
-      #   - x86_64
-      # MemorySize: 128
-      # Timeout: 100
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
@@ -117,38 +89,82 @@ Resources:
             Topic: !Ref MainSNSTopic
             FilterPolicy:
               command:
-                - searchv2
+                - search
       Environment:
         Variables:
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
-  # InfoLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     # CodeUri: src/commands
-  #     # Handler: info/search.handler
-  #     Handler: src/commands/info/info.handler
-  #     Runtime: nodejs16.x
-  #     Architectures:
-  #       - x86_64
-  #     MemorySize: 128
-  #     Timeout: 100
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
-  #     Events:
-  #       SNSEvent:
-  #         Type: SNS
-  #         Properties:
-  #           Topic: !Ref MainSNSTopic
-  #           FilterPolicy:
-  #             command:
-  #               - info
-  #     Environment:
-  #       Variables:
-  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
-  #         S3_ASSET_BUCKET: !Ref S3Bucket
+  ScheduleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Schedule
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Schedule/
+      Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - schedule
+                - sh
+      Environment:
+        Variables:
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
 
+  StatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Status
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Status/
+      Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - status
+      Environment:
+        Variables:
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  SubscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Subscribe
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Subscribe/
+      Handler: Proxy.Command.Subscribe::Proxy.Command.SubscribeFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - subscribe
+                - sub
+      Environment:
+        Variables:
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
 
 Outputs:
   ProxyGWEndpoint:

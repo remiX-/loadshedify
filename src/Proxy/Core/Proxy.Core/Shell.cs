@@ -18,7 +18,7 @@ public static class Shell
     _serviceCollection.AddSingleton<IHttpService, HttpService>();
     _serviceCollection.AddSingleton<TimerService>();
 
-    // Default AWS services
+    // Default AWS services?
     // _serviceCollection.AddSingleton<IStorageService, S3StorageService>();
     // _serviceCollection.AddSingleton<IDynamoService, DynamoService>();
 

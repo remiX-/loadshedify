@@ -1,0 +1,20 @@
+{
+  "name": "schedule",
+  "aliases": [ "sh" ],
+  "type": 1,
+  "description": "Retrieves load shedding schedule for current or specified day",
+  "options": [
+    {
+      "name": "id",
+      "description": "Id retrieved via /search",
+      "type": 3,
+      "required": true
+    },
+    {
+      "name": "day",
+      "description": "Day to retrieve schedule for (defaults to today)",
+      "type": 3,
+      "required": false
+    }
+  ]
+}

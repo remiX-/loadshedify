@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon;
-using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.SNSEvents;
@@ -17,58 +15,44 @@ using Proxy.ESP.Api;
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
 
-public class SearchFunction
+public class StatusFunction
 {
   private readonly JsonService _jsonService;
   private readonly DiscordHandler _discordClient;
   private readonly IEskomSePushClient _espClient;
 
-  private readonly ILogger<SearchFunction> _logger;
+  private readonly ILogger<StatusFunction> _logger;
 
-  public SearchFunction()
+  public StatusFunction()
   {
-    Console.WriteLine("SearchFunction.ctor");
+    Console.WriteLine("StatusFunction.ctor");
 
     Shell.ConfigureServices(collection =>
     {
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
-
-      // AWS
-      // TODO 
-      var endpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"));
-      collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
     });
 
     _jsonService = Shell.Get<JsonService>();
     _discordClient = Shell.Get<DiscordHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
-    _logger = Shell.Get<ILogger<SearchFunction>>();
+    _logger = Shell.Get<ILogger<StatusFunction>>();
   }
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
     if (!Validate(request, out var interaction)) return;
-
+    
     var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
-    var searchResults = await _espClient.SearchByText(searchText);
-
+    
     var embed = new EmbedBuilder()
-      .WithTitle($"Results for '{searchText}'")
-      .WithDescription($"{searchResults.Areas.Count} results")
-      .WithColor(Color.Blue);
-
-    // TODO reduce number of fields
-    foreach (var (id, name, region) in searchResults.Areas)
-    {
-      embed.AddField("id", name, inline: true);
-      embed.AddField("name", id, inline: true);
-      embed.AddField("region", region, inline: true);
-    }
-
+      .WithTitle("COMING SOON!")
+      .WithDescription("Watch this space...")
+      .WithColor(Color.DarkPurple);
+    
     await _discordClient.Handle(interaction, embed);
-
+    
     _logger.LogInformation("Great success!");
   }
 

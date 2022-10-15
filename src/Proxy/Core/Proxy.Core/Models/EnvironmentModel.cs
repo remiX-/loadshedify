@@ -4,8 +4,24 @@ namespace Proxy.Core.Models;
 
 public class EnvironmentModel : IEnvironmentModel
 {
-  public string Get(string key)
+  public string Get(string key, bool throwOnNotFound = true)
   {
-    return Environment.GetEnvironmentVariable(key) ?? throw new KeyNotFoundException($"Failed to retrieve environment variable: {key}");
+    var envVar = Environment.GetEnvironmentVariable(key);
+
+    if (envVar is not null) return envVar;
+
+    if (throwOnNotFound) throw new KeyNotFoundException($"Failed to retrieve environment variable: {key}");
+
+    Console.WriteLine($"Could not find variable: {key}");
+    return null;
+  }
+
+  public bool GetBool(string key, bool defaultValue)
+  {
+    var envVar = Environment.GetEnvironmentVariable(key);
+
+    if (envVar is null) return defaultValue;
+
+    return bool.Parse(envVar);
   }
 }

@@ -9,5 +9,5 @@ public interface IEskomSePushClient
 
   Task<SearchTextResponse> SearchByText(string search);
 
-  Task<AreaScheduleResponse> GetAreaSchedule(string areaId);
+  Task<AreaScheduleResponse> GetAreaSchedule(string areaId, string? simTest = null);
 }

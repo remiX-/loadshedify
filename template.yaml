@@ -69,6 +69,7 @@ Resources:
             RestApiId: !Ref proxyGateway
       Environment:
         Variables:
+          DEBUG_ENABLED: true
           TOPIC_ARN: !Ref MainSNSTopic
           PUBLIC_KEY: ba19504c256c91e3956390a115182e3a6e82f8d2e00044575fdd59821af6264d
 
@@ -92,6 +93,7 @@ Resources:
                 - search
       Environment:
         Variables:
+          DEBUG_ENABLED: true
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
@@ -113,9 +115,10 @@ Resources:
             FilterPolicy:
               command:
                 - schedule
-                - sh
+                - schedulesim
       Environment:
         Variables:
+          DEBUG_ENABLED: true
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
@@ -139,6 +142,7 @@ Resources:
                 - status
       Environment:
         Variables:
+          DEBUG_ENABLED: true
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
@@ -163,6 +167,7 @@ Resources:
                 - sub
       Environment:
         Variables:
+          DEBUG_ENABLED: true
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 

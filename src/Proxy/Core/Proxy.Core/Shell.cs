@@ -15,14 +15,10 @@ public static class Shell
   {
     _serviceCollection = new ServiceCollection();
 
-    _serviceCollection.AddSingleton<IEnvironmentModel, EnvironmentModel>();
-    _serviceCollection.AddSingleton<IJsonService, JsonService>();
-    _serviceCollection.AddSingleton<IHttpService, HttpService>();
-    _serviceCollection.AddSingleton<ITimerService, TimerService>();
-
-    // Default AWS services?
-    // _serviceCollection.AddSingleton<IStorageService, S3StorageService>();
-    // _serviceCollection.AddSingleton<IDynamoService, DynamoService>();
+    MapModels(_serviceCollection);
+    MapServices(_serviceCollection);
+    MapTestData(_serviceCollection);
+    MapAwsServices(_serviceCollection);
 
     _serviceCollection.AddLogging(logging =>
     {
@@ -33,6 +29,42 @@ public static class Shell
     setup?.Invoke(_serviceCollection);
 
     _services = _serviceCollection.BuildServiceProvider();
+  }
+
+  private static void MapModels(IServiceCollection sc)
+  {
+    sc.AddSingleton<IEnvironmentModel, EnvironmentModel>();
+    sc.AddSingleton<IVariablesModel>(sp =>
+    {
+      var envModel = sp.GetService<IEnvironmentModel>()!;
+
+      return new VariablesModel
+      {
+        AspNetEnvironment = envModel.Get("ASPNETCORE_ENVIRONMENT", false),
+        DebugEnabled = envModel.GetBool("DEBUG_ENABLED", false),
+        EspAuthToken = envModel.Get("ESP_AUTH_TOKEN"),
+        S3AssetBucket = envModel.Get("S3_ASSET_BUCKET"),
+      };
+    });
+  }
+
+  private static void MapServices(IServiceCollection sc)
+  {
+    sc.AddSingleton<IJsonService, JsonService>();
+    sc.AddSingleton<IHttpService, HttpService>();
+    sc.AddSingleton<ITimerService, TimerService>();
+  }
+
+  private static void MapTestData(IServiceCollection sc)
+  {
+    sc.AddSingleton<TestDataProvider>();
+  }
+
+  private static void MapAwsServices(IServiceCollection sc)
+  {
+    // Default AWS services?
+    // _serviceCollection.AddSingleton<IStorageService, S3StorageService>();
+    // _serviceCollection.AddSingleton<IDynamoService, DynamoService>();
   }
 
   public static T Get<T>()

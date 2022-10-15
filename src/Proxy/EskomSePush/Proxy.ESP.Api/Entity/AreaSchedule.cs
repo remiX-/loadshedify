@@ -1,7 +1,5 @@
 ﻿namespace Proxy.ESP.Api.Entity;
 
-
-
 public struct AreaScheduleInfo
 {
   public string Name { get; init; }

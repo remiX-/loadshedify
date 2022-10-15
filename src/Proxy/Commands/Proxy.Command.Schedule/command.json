@@ -13,6 +13,7 @@
       "name": "day",
       "description": "Day to retrieve schedule for (defaults to today)",
       "type": 3,
+      "required": false,
       "choices": [
         {
           "name": "sunday",
@@ -41,9 +42,8 @@
         {
           "name": "saturday",
           "value": "saturday"
-        },
-      ],
-      "required": false
+        }
+      ]
     }
   ]
 }

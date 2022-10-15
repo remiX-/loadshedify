@@ -41,7 +41,7 @@ deploy:
 		--parameter-overrides AppIdentifier=$(app) Environment=$(environment) EspAuthToken=$(espAuthToken)
 
 update_commands:
-	node register_commands/register.js
+	node register_commands/register.mjs
 
 artifacts:
 	node ./src/scripts/uploadAssets.mjs $(app)v2-$(environment)

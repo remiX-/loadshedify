@@ -4,7 +4,7 @@ namespace Proxy.ESP.Api.Response;
 
 public struct AreaScheduleResponse
 {
-  public IList<object> Events { get; init; }
+  public IList<AreaScheduleEvent> Events { get; init; }
 
   public AreaScheduleInfo Info { get; init; }
 

@@ -9,8 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Proxy.Command.Handler;
 using Proxy.Core;
+using Proxy.Core.Extensions;
+using Proxy.Core.Services;
 using Proxy.DiscordProxy;
 using Proxy.ESP.Api;
+using Proxy.ESP.Api.Response;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
@@ -19,6 +22,7 @@ public class StatusFunction
 {
   private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
+  private readonly TestDataProvider _testDataProvider;
 
   private readonly ILogger<StatusFunction> _logger;
 
@@ -35,6 +39,7 @@ public class StatusFunction
 
     _commandHandler = Shell.Get<CommandHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
+    _testDataProvider = Shell.Get<TestDataProvider>();
 
     _logger = Shell.Get<ILogger<StatusFunction>>();
   }
@@ -46,7 +51,15 @@ public class StatusFunction
 
   private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
-    var statusResponse = await _espClient.Status();
+    StatusResponse statusResponse;
+    if (interaction.Dev && !interaction.Testdata.IsNullOrEmpty())
+    {
+      statusResponse = _testDataProvider.GetTestData<StatusResponse>(interaction.Testdata);
+    }
+    else
+    {
+      statusResponse = await _espClient.Status();
+    }
 
     var embeds = new List<EmbedBuilder>();
 
@@ -66,13 +79,14 @@ public class StatusFunction
 
       if (status.NextStages.Count == 0) continue;
 
-      embed.AddField("Future updates", "test");
+      embed.AddField("Upcoming events below", "Oh noes!");
 
       foreach (var next in status.NextStages)
       {
         var nextStage = int.Parse(next.Stage);
 
-        embed.AddField($"Stage {nextStage}", next.Timestamp);
+        embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM HH:mm"));
+        // embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM HH:mm:ss tt zz"));
       }
     }
 

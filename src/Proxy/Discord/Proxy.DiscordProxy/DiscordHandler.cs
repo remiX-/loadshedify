@@ -10,17 +10,17 @@ public class DiscordHandler
 {
   private readonly IHttpService _httpService;
   private readonly IJsonService _jsonService;
-  private readonly IEnvironmentModel _envService;
+  private readonly IVariablesModel _varModel;
   private readonly ILogger<DiscordHandler> _logger;
 
   public DiscordHandler(IHttpService httpService,
     IJsonService jsonService,
-    IEnvironmentModel envService,
+    IVariablesModel varModel,
     ILogger<DiscordHandler> logger)
   {
     _httpService = httpService;
     _jsonService = jsonService;
-    _envService = envService;
+    _varModel = varModel;
     _logger = logger;
   }
 
@@ -70,7 +70,7 @@ public class DiscordHandler
         {
           footer.Text = "Developed by remiX";
           // TODO convert to S3 Service
-          footer.IconUrl = $"https://{_envService.Get("S3_ASSET_BUCKET")}.s3.eu-west-1.amazonaws.com/assets/images/electricity.png";
+          footer.IconUrl = $"https://{_varModel.S3AssetBucket}.s3.eu-west-1.amazonaws.com/assets/images/electricity.png";
         });
     }
 

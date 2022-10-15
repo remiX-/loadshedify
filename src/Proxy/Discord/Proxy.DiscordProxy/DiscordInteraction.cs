@@ -7,6 +7,8 @@ public struct DiscordInteraction
 {
   public bool Dev { get; set; }
 
+  public string Testdata { get; set; }
+
   [JsonPropertyName("id")]
   public string Id { get; set; }
 

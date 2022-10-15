@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -8,12 +9,15 @@ using Amazon.Lambda.SNSEvents;
 using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Proxy.Command.Handler;
 using Proxy.Core;
 using Proxy.Core.Services;
 using Proxy.DiscordProxy;
 using Proxy.DiscordProxy.Extensions;
 using Proxy.ESP.Api;
+using Proxy.ESP.Api.Entity;
+using Proxy.ESP.Api.Response;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
@@ -25,6 +29,8 @@ public class ScheduleFunction
   private readonly IEskomSePushClient _espClient;
 
   private readonly ILogger<ScheduleFunction> _logger;
+
+  private const int TimezoneToUse = 2;
 
   public ScheduleFunction()
   {
@@ -51,21 +57,27 @@ public class ScheduleFunction
 
   private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
-    var areaId = interaction.Data.Options[0].Value.ToString()!.Trim();
-    var day = GetDay(interaction.Data.Options.FirstOrDefault(option => option.Name.Equals("day")));
-    var searchResults = await _espClient.GetAreaSchedule(areaId);
+    var commandName = interaction.Data.Name;
+    var (areaId, scheduleResponse) = await GetSchedule(commandName, interaction.Data.Options.First());
 
-    if (searchResults.Events is null)
+    if (scheduleResponse.Events is null)
     {
       throw new Exception($"Invalid area id: '{areaId}'");
     }
 
-    var schedule = searchResults.Schedule.Days.First(d => d.Name.Equals(day, StringComparison.OrdinalIgnoreCase));
+    var day = GetDay(interaction.Data.Options.FirstOrDefault(option => option.Name.Equals("day")));
+    var schedule = scheduleResponse.Schedule.Days.First(d => d.Name.Equals(day, StringComparison.OrdinalIgnoreCase));
 
     var embed = new EmbedBuilder()
       .WithTitle($"Stage schedule for {areaId}")
-      .WithDescription($"**Date:** {schedule.Name}, {schedule.Date}\n**Region:** {searchResults.Info.Region}")
-      .WithColor(Color.DarkOrange);
+      .WithDescription($"**Date:** {schedule.Name}, {schedule.Date}\n**Region:** {scheduleResponse.Info.Region}")
+      .WithColor(Color.Magenta);
+
+    if (scheduleResponse.Events.Count > 0)
+    {
+      // Loadshedding happening now or in future
+      AddEvents(embed, scheduleResponse.Events);
+    }
 
     for (int stageIndex = 0; stageIndex < schedule.Stages.Count; stageIndex++)
     {
@@ -87,18 +99,73 @@ public class ScheduleFunction
     return new List<EmbedBuilder> { embed };
   }
 
-  private string GetDay(DiscordDataOption? option)
+  private async Task<(string areaId, AreaScheduleResponse response)> GetSchedule(string commandName, DiscordDataOption option)
+  {
+    string testSim = null;
+    string areaId;
+
+    if (commandName.Equals("schedule"))
+    {
+      areaId = option.Value.ToString()!.Trim();
+    }
+    else
+    {
+      testSim = option.Name;
+      areaId = option.Options[0].Value.ToString()!.Trim();
+    }
+
+    var response = await _espClient.GetAreaSchedule(areaId, testSim);
+
+    return (areaId, response);
+  }
+
+  private void AddEvents(EmbedBuilder embed, IList<AreaScheduleEvent> events)
+  {
+    foreach (var ev in events)
+    {
+      var eventStarted = ev.Start.UtcDateTime < DateTime.UtcNow;
+
+      if (eventStarted) AddCurrentEvent(embed, ev);
+      else AddFutureEvent(embed, ev);
+    }
+  }
+
+  private void AddCurrentEvent(EmbedBuilder embed, AreaScheduleEvent ev)
+  {
+    var endsIn = ev.End.UtcDateTime - DateTime.UtcNow;
+    var formattedTime = endsIn.Hours > 0
+      ? $"{endsIn.Hours} hours, {endsIn.Minutes} mins"
+      : $"{endsIn.Minutes} mins";
+
+    embed.Description += $"\n**Status:** :( Stage {ev.Stage}";
+    embed.AddEmptyFieldWithName($"ACTIVE Stage {ev.Stage}, ends in {formattedTime}");
+    embed.WithColor(Color.Red);
+  }
+
+  private void AddFutureEvent(EmbedBuilder embed, AreaScheduleEvent ev)
+  {
+    var startsIn = ev.Start.UtcDateTime - DateTime.UtcNow;
+    var formattedTime = startsIn.Hours > 0
+      ? $"{startsIn.Hours}hours, {startsIn.Minutes} mins"
+      : $"{startsIn.Minutes} mins";
+
+    embed.Description += "\n**Status:** All good, woot! For now... :/";
+    embed.AddEmptyFieldWithName($"UPCOMING Stage {ev.Stage}, starts in {formattedTime}");
+    embed.WithColor(Color.Orange);
+  }
+
+  private string GetDay(DiscordDataOption option)
   {
     var today = DateTime.Now.DayOfWeek.ToString();
 
-    if (!option.HasValue)
+    if (option.Name is null)
     {
       // no day specified
       _logger.LogDebug($"No day specified, using today: {today}");
       return today;
     }
 
-    var day = option.Value.Value.ToString();
+    var day = option.Value.ToString();
     var valid = Enum.TryParse<DayOfWeek>(day, true, out var specifiedDay);
     if (valid) return specifiedDay.ToString();
 

@@ -32,14 +32,16 @@ import chalk from "chalk";
   // console.log(endpoint);
   // console.log(JSON.stringify(commands, null, 2));
 
-  // axios.put(endpoint, JSON.stringify(commands), { headers: headers })
-  //   .then(() => console.log(`${cmdInfo} Commands registered.`))
-  //   .catch(e => console.error(e))
+  axios.put(endpoint, JSON.stringify(commands), { headers: headers })
+    .then(() => console.log(`${cmdInfo} Commands registered.`))
+    .catch(e => {
+      console.error(JSON.stringify(e.response.data, null, 2));
+    })
 })();
 
 async function loadCommands() {
   const commandsDir = path.resolve('./src/Proxy/Commands');
-  const commands = await globby("**/command.json", { commandsDir });
+  const commands = await globby("**/command*.json", { commandsDir });
 
   let commandsOut = []
 

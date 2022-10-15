@@ -1,0 +1,26 @@
+{
+  "status": {
+    "capetown": {
+      "name": "Cape Town",
+      "next_stages": [
+        {
+          "stage": "2",
+          "stage_start_timestamp": "2022-10-15T14:00:00+02:00"
+        }
+      ],
+      "stage": "0",
+      "stage_updated": "2022-10-12T16:00:19.812353+02:00"
+    },
+    "eskom": {
+      "name": "South Africa",
+      "next_stages": [
+        {
+          "stage": "2",
+          "stage_start_timestamp": "2022-10-15T14:00:00+02:00"
+        }
+      ],
+      "stage": "0",
+      "stage_updated": "2022-10-15T00:00:43.033164+02:00"
+    }
+  }
+}

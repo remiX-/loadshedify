@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Amazon.Runtime.Internal;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Microsoft.Extensions.Logging;
@@ -13,7 +12,9 @@ namespace Proxy.BotHandler;
 
 public class BotProxyFunction
 {
-  private readonly JsonService _jsonService;
+  private readonly IHttpService _httpService;
+  private readonly IJsonService _jsonService;
+
   private readonly ILogger<BotProxyFunction> _logger;
 
   public BotProxyFunction()
@@ -22,12 +23,16 @@ public class BotProxyFunction
 
     Shell.ConfigureServices();
 
-    _jsonService = Shell.Get<JsonService>();
+    _httpService = Shell.Get<IHttpService>();
+    _jsonService = Shell.Get<IJsonService>();
     _logger = Shell.Get<ILogger<BotProxyFunction>>();
   }
 
-  public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+  public APIGatewayProxyResponse FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
   {
+    _logger.LogDebug($"Container Id: {context.AwsRequestId}");
+    _logger.LogDebug(_jsonService.Serialize(request));
+
     // Checking signature (requirement 1.)
     var isVerified = VerifySignature(request.Body, request.Headers);
     if (!isVerified)
@@ -62,7 +67,7 @@ public class BotProxyFunction
 
     // Handle command in a new thread to be able to respond to Discord asap
     // Sends a notification via SNS and splits to one of Lambdas
-    await SnsSend(request.Body, body.Data.Name);
+    SnsSend(request.Body, body.Data.Name);
 
     return new APIGatewayProxyResponse
     {
@@ -104,7 +109,7 @@ public class BotProxyFunction
     return true;
   }
 
-  private async Task SnsSend(string body, string commandName)
+  private void SnsSend(string body, string commandName)
   {
     var topicArn = Environment.GetEnvironmentVariable("TOPIC_ARN");
 
@@ -114,35 +119,39 @@ public class BotProxyFunction
       Subject = $"Discord bot SNS message: {commandName}",
       TopicArn = topicArn,
       MessageAttributes = new Dictionary<string, MessageAttributeValue>()
+    {
       {
+        "command",
+        new MessageAttributeValue
         {
-          "command",
-          new MessageAttributeValue
-          {
-            DataType = "String",
-            StringValue = commandName
-          }
+          DataType = "String",
+          StringValue = commandName
         }
-      },
+      }
+    }
     };
 
-    _logger.LogDebug(_jsonService.Serialize(snsParams));
     _logger.LogDebug("Sending SNS...");
 
-    using var snsClient = new AmazonSimpleNotificationServiceClient();
-    var snsResponse = await snsClient.PublishAsync(snsParams);
-
-    _logger.LogDebug(_jsonService.Serialize(snsResponse));
+    var snsClient = new AmazonSimpleNotificationServiceClient();
+    snsClient.PublishAsync(snsParams).Wait();
+    _logger.LogDebug("SNS Sent!");
   }
 }
 
 internal struct DiscordProxyRequest
 {
   public int Type { get; init; }
+
+  public string Id { get; init; }
+
   public DiscordCommandData Data { get; init; }
+
+  public string Token { get; init; }
 }
 
 internal struct DiscordCommandData
 {
+  public string Id { get; init; }
   public string Name { get; init; }
 }

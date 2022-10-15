@@ -18,7 +18,7 @@
         "MessageAttributes": {
           "command": {
             "Type": "String",
-            "Value": "searchv2"
+            "Value": "status"
           }
         }
       }

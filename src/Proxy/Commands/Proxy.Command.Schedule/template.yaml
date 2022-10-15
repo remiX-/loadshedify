@@ -3,8 +3,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Zip
-      CodeUri: src/Proxy/Commands/Proxy.Command.Search/
-      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
+      CodeUri: src/Proxy/Commands/Proxy.Command.Schedule/
+      Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler
       Runtime: dotnet6
       Policies:
         - AWSLambdaBasicExecutionRole

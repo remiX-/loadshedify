@@ -29,7 +29,6 @@ build:
 	sam build \
 		--cached \
 		--profile $(profile_name)
-		# --parallel \
 
 deploy:
 	sam deploy \

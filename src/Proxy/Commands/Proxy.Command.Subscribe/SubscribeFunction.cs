@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -9,6 +9,7 @@ using Amazon.Lambda.SNSEvents;
 using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Proxy.Command.Handler;
 using Proxy.Core;
 using Proxy.Core.Services;
 using Proxy.DiscordProxy;
@@ -19,8 +20,8 @@ namespace Proxy.Command;
 
 public class SubscribeFunction
 {
-  private readonly JsonService _jsonService;
-  private readonly DiscordHandler _discordClient;
+  private readonly IJsonService _jsonService;
+  private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
 
   private readonly ILogger<SubscribeFunction> _logger;
@@ -31,6 +32,7 @@ public class SubscribeFunction
 
     Shell.ConfigureServices(collection =>
     {
+      collection.AddSingleton<CommandHandler>();
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
 
@@ -40,8 +42,8 @@ public class SubscribeFunction
       collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
     });
 
-    _jsonService = Shell.Get<JsonService>();
-    _discordClient = Shell.Get<DiscordHandler>();
+    _jsonService = Shell.Get<IJsonService>();
+    _commandHandler = Shell.Get<CommandHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
     _logger = Shell.Get<ILogger<SubscribeFunction>>();
@@ -49,47 +51,16 @@ public class SubscribeFunction
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
-    if (!Validate(request, out var interaction)) return;
+    await _commandHandler.Handle(request, Action);
+  }
 
-    var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
-
+  private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
+  {
     var embed = new EmbedBuilder()
       .WithTitle("COMING SOON!")
       .WithDescription("Watch this space...")
       .WithColor(Color.DarkPurple);
 
-    await _discordClient.Handle(interaction, embed);
-
-    _logger.LogInformation("Great success!");
-  }
-
-  private bool Validate(SNSEvent request, out DiscordInteraction interaction)
-  {
-    interaction = default;
-
-    _logger.LogDebug(_jsonService.Serialize(request));
-
-    // Validate SNS Record
-    var snsRecord = request.Records?.FirstOrDefault();
-
-    if (snsRecord is null)
-    {
-      _logger.LogCritical("Failed to get SNS Record");
-      return false;
-    }
-
-    if (request.Records.Count > 1)
-    {
-      _logger.LogWarning($"SNS received with {request.Records.Count} records");
-    }
-
-    var messageHealthy = _jsonService.TryDeserialize<DiscordInteraction>(snsRecord.Sns.Message, out interaction);
-    if (!messageHealthy)
-    {
-      _logger.LogCritical("SNS Message is unhealthy");
-      return false;
-    }
-
-    return true;
+    return new List<EmbedBuilder> { embed };
   }
 }

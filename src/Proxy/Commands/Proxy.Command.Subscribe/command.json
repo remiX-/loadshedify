@@ -1,6 +1,5 @@
 {
   "name": "subscribe",
-  "aliases": [ "sub" ],
   "type": 1,
   "description": "Subscribes to a given area for live notifications",
   "options": [

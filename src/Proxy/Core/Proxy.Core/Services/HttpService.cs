@@ -6,10 +6,11 @@ namespace Proxy.Core.Services;
 
 public class HttpService : IHttpService
 {
-  private readonly JsonService _jsonService;
+  private readonly IJsonService _jsonService;
+
   private readonly HttpClient _httpClient;
 
-  public HttpService(JsonService jsonService)
+  public HttpService(IJsonService jsonService)
   {
     _jsonService = jsonService;
 

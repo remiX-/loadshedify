@@ -8,9 +8,11 @@ using Amazon.Lambda.SNSEvents;
 using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Proxy.Command.Handler;
 using Proxy.Core;
 using Proxy.Core.Services;
 using Proxy.DiscordProxy;
+using Proxy.DiscordProxy.Extensions;
 using Proxy.ESP.Api;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
@@ -18,8 +20,8 @@ namespace Proxy.Command;
 
 public class ScheduleFunction
 {
-  private readonly JsonService _jsonService;
-  private readonly DiscordHandler _discordClient;
+  private readonly IJsonService _jsonService;
+  private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
 
   private readonly ILogger<ScheduleFunction> _logger;
@@ -30,12 +32,13 @@ public class ScheduleFunction
 
     Shell.ConfigureServices(collection =>
     {
+      collection.AddSingleton<CommandHandler>();
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
     });
 
-    _jsonService = Shell.Get<JsonService>();
-    _discordClient = Shell.Get<DiscordHandler>();
+    _jsonService = Shell.Get<IJsonService>();
+    _commandHandler = Shell.Get<CommandHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
     _logger = Shell.Get<ILogger<ScheduleFunction>>();
@@ -43,17 +46,25 @@ public class ScheduleFunction
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
-    if (!Validate(request, out var interaction)) return;
+    await _commandHandler.Handle(request, Action);
+  }
 
+  private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
+  {
     var areaId = interaction.Data.Options[0].Value.ToString()!.Trim();
-    var day = GetDay(interaction.Data.Options);
-    day = "thursday";
+    var day = GetDay(interaction.Data.Options.FirstOrDefault(option => option.Name.Equals("day")));
     var searchResults = await _espClient.GetAreaSchedule(areaId);
+
+    if (searchResults.Events is null)
+    {
+      throw new Exception($"Invalid area id: '{areaId}'");
+    }
+
     var schedule = searchResults.Schedule.Days.First(d => d.Name.Equals(day, StringComparison.OrdinalIgnoreCase));
 
     var embed = new EmbedBuilder()
-      .WithTitle($"Stage schedule for ${areaId}")
-      .WithDescription($"Date: ${schedule.Name}, ${schedule.Date}\nRegion: ${searchResults.Info.Region}")
+      .WithTitle($"Stage schedule for {areaId}")
+      .WithDescription($"**Date:** {schedule.Name}, {schedule.Date}\n**Region:** {searchResults.Info.Region}")
       .WithColor(Color.DarkOrange);
 
     for (int stageIndex = 0; stageIndex < schedule.Stages.Count; stageIndex++)
@@ -67,64 +78,31 @@ public class ScheduleFunction
         val = stage.Aggregate((first, next) => $"{first}\n{next}").Replace("-", " - ");
       }
 
-      embed.AddField($"Stage {stageIndex + 1}", val, inline: true);
+      embed.AddField($"Stage {stageIndex + 1}", val, true);
 
       // Add blank every 2 stages to force 2 columns
-      if (stageIndex % 2 == 0) embed.AddField("\u200B", "\u200B", inline: true);
+      if (stageIndex % 2 == 0) embed.AddInlineEmptyField();
     }
 
-    // TODO reduce number of fields
-    // foreach (var (id, name, region) in searchResults.Areas)
-    // {
-    //   embed.AddField("id", name, inline: true);
-    //   embed.AddField("name", id, inline: true);
-    //   embed.AddField("region", region, inline: true);
-    // }
-
-    await _discordClient.Handle(interaction, embed);
-
-    _logger.LogInformation("Great success!");
+    return new List<EmbedBuilder> { embed };
   }
 
-  private string GetDay(IList<DiscordDataOption> options)
+  private string GetDay(DiscordDataOption? option)
   {
     var today = DateTime.Now.DayOfWeek.ToString();
-    if (options.Count < 2)
+
+    if (!option.HasValue)
     {
       // no day specified
-      _logger.LogDebug($"No day specified, using today {today}");
+      _logger.LogDebug($"No day specified, using today: {today}");
+      return today;
     }
 
+    var day = option.Value.Value.ToString();
+    var valid = Enum.TryParse<DayOfWeek>(day, true, out var specifiedDay);
+    if (valid) return specifiedDay.ToString();
+
+    _logger.LogDebug($"Specified day '{day}' is not valid, using today: {today}");
     return today;
-  }
-
-  private bool Validate(SNSEvent request, out DiscordInteraction interaction)
-  {
-    interaction = default;
-
-    _logger.LogDebug(_jsonService.Serialize(request));
-
-    // Validate SNS Record
-    var snsRecord = request.Records?.FirstOrDefault();
-
-    if (snsRecord is null)
-    {
-      _logger.LogCritical("Failed to get SNS Record");
-      return false;
-    }
-
-    if (request.Records.Count > 1)
-    {
-      _logger.LogWarning($"SNS received with {request.Records.Count} records");
-    }
-
-    var messageHealthy = _jsonService.TryDeserialize<DiscordInteraction>(snsRecord.Sns.Message, out interaction);
-    if (!messageHealthy)
-    {
-      _logger.LogCritical("SNS Message is unhealthy");
-      return false;
-    }
-
-    return true;
   }
 }

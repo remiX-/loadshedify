@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -7,8 +7,8 @@ using Amazon.Lambda.SNSEvents;
 using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Proxy.Command.Handler;
 using Proxy.Core;
-using Proxy.Core.Services;
 using Proxy.DiscordProxy;
 using Proxy.ESP.Api;
 
@@ -17,8 +17,7 @@ namespace Proxy.Command;
 
 public class StatusFunction
 {
-  private readonly JsonService _jsonService;
-  private readonly DiscordHandler _discordClient;
+  private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
 
   private readonly ILogger<StatusFunction> _logger;
@@ -29,12 +28,12 @@ public class StatusFunction
 
     Shell.ConfigureServices(collection =>
     {
+      collection.AddSingleton<CommandHandler>();
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
     });
 
-    _jsonService = Shell.Get<JsonService>();
-    _discordClient = Shell.Get<DiscordHandler>();
+    _commandHandler = Shell.Get<CommandHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
     _logger = Shell.Get<ILogger<StatusFunction>>();
@@ -42,47 +41,54 @@ public class StatusFunction
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
-    if (!Validate(request, out var interaction)) return;
-    
-    var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
-    
-    var embed = new EmbedBuilder()
-      .WithTitle("COMING SOON!")
-      .WithDescription("Watch this space...")
-      .WithColor(Color.DarkPurple);
-    
-    await _discordClient.Handle(interaction, embed);
-    
-    _logger.LogInformation("Great success!");
+    await _commandHandler.Handle(request, Action);
   }
 
-  private bool Validate(SNSEvent request, out DiscordInteraction interaction)
+  private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
-    interaction = default;
+    var statusResponse = await _espClient.Status();
 
-    _logger.LogDebug(_jsonService.Serialize(request));
+    var embeds = new List<EmbedBuilder>();
 
-    // Validate SNS Record
-    var snsRecord = request.Records?.FirstOrDefault();
-
-    if (snsRecord is null)
+    foreach (var (_, status) in statusResponse.Status)
     {
-      _logger.LogCritical("Failed to get SNS Record");
-      return false;
+      var stage = int.Parse(status.Stage);
+      var embed = new EmbedBuilder()
+        .WithTitle(status.Name)
+        .WithDescription(
+          stage == 0
+            ? "**No loadshedding!**"
+            : $"**Current stage:** {status.Stage}\n**Updated at:** {status.Updated}"
+        )
+        .WithColor(GetColorForStage(stage));
+
+      embeds.Add(embed);
+
+      if (status.NextStages.Count == 0) continue;
+
+      embed.AddField("Future updates", "test");
+
+      foreach (var next in status.NextStages)
+      {
+        var nextStage = int.Parse(next.Stage);
+
+        embed.AddField($"Stage {nextStage}", next.Timestamp);
+      }
     }
 
-    if (request.Records.Count > 1)
-    {
-      _logger.LogWarning($"SNS received with {request.Records.Count} records");
-    }
+    return embeds;
+  }
 
-    var messageHealthy = _jsonService.TryDeserialize<DiscordInteraction>(snsRecord.Sns.Message, out interaction);
-    if (!messageHealthy)
+  private Color GetColorForStage(int stage)
+  {
+    return stage switch
     {
-      _logger.LogCritical("SNS Message is unhealthy");
-      return false;
-    }
-
-    return true;
+      0 => Color.Green,
+      1 or 2 => new Color(248, 255, 18),
+      3 or 4 => Color.LightOrange,
+      5 => Color.DarkOrange,
+      6 or 7 or 8 => Color.Red,
+      _ => throw new IndexOutOfRangeException($"Stage out of bounds of 1 - 8: {stage}")
+    };
   }
 }

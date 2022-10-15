@@ -15,10 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Proxy.Core.Abstractions\Proxy.Core.Abstractions.csproj" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Proxy.Core.Services;
 
-public class JsonService
+public class JsonService : IJsonService
 {
   public JsonService()
   { }
@@ -16,20 +16,6 @@ public class JsonService
     }
 
     return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions
-    {
-      PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-      // DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
-    });
-  }
-
-  public T Deserialize<T>(object json)
-  {
-    // if (json is null)
-    // {
-    //   throw new ArgumentNullException("json is null");
-    // }
-
-    return JsonSerializer.Deserialize<T>(json.ToString()!, new JsonSerializerOptions
     {
       PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     });
@@ -69,7 +55,6 @@ public class JsonService
       return null;
     }
   }
-
 
   public dynamic DebugObject(object obj)
   {

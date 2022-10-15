@@ -1,6 +1,6 @@
 ﻿namespace Proxy.Core.Services;
 
-public class TimerService
+public class TimerService : ITimerService
 {
   private readonly Dictionary<string, DateTime> _idToStartTimeMap;
 

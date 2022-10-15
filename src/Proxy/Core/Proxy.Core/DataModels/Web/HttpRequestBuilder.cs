@@ -30,9 +30,16 @@ public class HttpRequestBuilder : IHttpRequestBuilder
     return this;
   }
 
-  public IHttpRequestBuilder WithUrl(string url)
+  public IHttpRequestBuilder WithUrl(params string[] url)
   {
-    Url = url;
+    Url = UrlHelpers.SafeUrl(url);
+
+    return this;
+  }
+
+  public IHttpRequestBuilder AppendUrl(params string[] url)
+  {
+    Url = UrlHelpers.SafeUrl(Url, url);
 
     return this;
   }
@@ -56,13 +63,6 @@ public class HttpRequestBuilder : IHttpRequestBuilder
     {
       Url += $"?{queryParam}={value}";
     }
-
-    return this;
-  }
-
-  public IHttpRequestBuilder WithUrl(params string[] url)
-  {
-    Url = UrlHelpers.SafeUrl(url);
 
     return this;
   }

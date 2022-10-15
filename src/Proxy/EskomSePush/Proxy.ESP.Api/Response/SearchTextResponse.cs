@@ -1,4 +1,6 @@
-﻿namespace Proxy.ESP.Api.Entity;
+﻿using Proxy.ESP.Api.Entity;
+
+namespace Proxy.ESP.Api.Response;
 
 public struct SearchTextResponse
 {

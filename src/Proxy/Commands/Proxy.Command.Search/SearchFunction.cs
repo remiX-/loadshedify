@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
@@ -9,18 +10,22 @@ using Amazon.Lambda.SNSEvents;
 using Discord;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Proxy.Command.Handler;
 using Proxy.Core;
 using Proxy.Core.Services;
 using Proxy.DiscordProxy;
+using Proxy.DiscordProxy.Extensions;
 using Proxy.ESP.Api;
+using Proxy.ESP.Api.Entity;
+using Proxy.ESP.Api.Response;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
 
 public class SearchFunction
 {
-  private readonly JsonService _jsonService;
-  private readonly DiscordHandler _discordClient;
+  private readonly IJsonService _jsonService;
+  private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
 
   private readonly ILogger<SearchFunction> _logger;
@@ -31,6 +36,7 @@ public class SearchFunction
 
     Shell.ConfigureServices(collection =>
     {
+      collection.AddSingleton<CommandHandler>();
       collection.AddSingleton<DiscordHandler>();
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
 
@@ -40,8 +46,8 @@ public class SearchFunction
       collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
     });
 
-    _jsonService = Shell.Get<JsonService>();
-    _discordClient = Shell.Get<DiscordHandler>();
+    _jsonService = Shell.Get<IJsonService>();
+    _commandHandler = Shell.Get<CommandHandler>();
     _espClient = Shell.Get<IEskomSePushClient>();
 
     _logger = Shell.Get<ILogger<SearchFunction>>();
@@ -49,56 +55,58 @@ public class SearchFunction
 
   public async Task FunctionHandler(SNSEvent request, ILambdaContext context)
   {
-    if (!Validate(request, out var interaction)) return;
+    await _commandHandler.Handle(request, Action);
+  }
 
+  private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
+  {
     var searchText = interaction.Data.Options[0].Value.ToString()!.Trim();
     var searchResults = await _espClient.SearchByText(searchText);
 
-    var embed = new EmbedBuilder()
-      .WithTitle($"Results for '{searchText}'")
-      .WithDescription($"{searchResults.Areas.Count} results")
-      .WithColor(Color.Blue);
+// #if DEBUG
+//     var searchResults = await GetFakeSearchResponse();
+// #endif
 
-    // TODO reduce number of fields
-    foreach (var (id, name, region) in searchResults.Areas)
+    // embed per region
+    var distinctRegions = searchResults.Areas.Select(area => area.Region).Distinct();
+    var embeds = new List<EmbedBuilder>();
+
+    foreach (var distinctRegion in distinctRegions)
     {
-      embed.AddField("id", name, inline: true);
-      embed.AddField("name", id, inline: true);
-      embed.AddField("region", region, inline: true);
+      var regionAreas = searchResults.Areas.Where(area => area.Region.Equals(distinctRegion)).ToArray();
+
+      var embed = new EmbedBuilder()
+        .WithTitle(distinctRegion)
+        .WithDescription($"{regionAreas.Length} result{(regionAreas.Length == 1 ? "" : "s")}")
+        .WithColor(Color.Blue);
+
+      foreach (var (id, name, _) in regionAreas)
+      {
+        embed.AddField("Name", name, true);
+        embed.AddField("Id", id, true);
+        embed.AddInlineEmptyField();
+      }
+      
+      embeds.Add(embed);
     }
 
-    await _discordClient.Handle(interaction, embed);
-
-    _logger.LogInformation("Great success!");
+    return embeds;
   }
 
-  private bool Validate(SNSEvent request, out DiscordInteraction interaction)
+#if DEBUG
+  private Task<SearchTextResponse> GetFakeSearchResponse()
   {
-    interaction = default;
-
-    _logger.LogDebug(_jsonService.Serialize(request));
-
-    // Validate SNS Record
-    var snsRecord = request.Records?.FirstOrDefault();
-
-    if (snsRecord is null)
+    return Task.FromResult(new SearchTextResponse()
     {
-      _logger.LogCritical("Failed to get SNS Record");
-      return false;
-    }
-
-    if (request.Records.Count > 1)
-    {
-      _logger.LogWarning($"SNS received with {request.Records.Count} records");
-    }
-
-    var messageHealthy = _jsonService.TryDeserialize<DiscordInteraction>(snsRecord.Sns.Message, out interaction);
-    if (!messageHealthy)
-    {
-      _logger.LogCritical("SNS Message is unhealthy");
-      return false;
-    }
-
-    return true;
+      Areas = new List<Area>
+      {
+        new() { Id = "ethekwini2-4-umhlangaeast", Name = "Umhlanga East (4)", Region = "eThekwini Municipality" },
+        new() { Id = "ethekwini2-9-umhlanganoot", Name = "Umhlanga Noot (9)", Region = "eThekwini Municipality" },
+        new() { Id = "ethekwini2-12-umhlangasouth", Name = "Umhlanga South (12)", Region = "Not eThekwini Municipality" },
+        new() { Id = "very-1-real", Name = "Very Real (1)", Region = "Fake Region" },
+        new() { Id = "hello-5-lol", Name = "Hello (5)", Region = "Lol:)" }
+      }
+    });
   }
+#endif
 }

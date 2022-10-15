@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Proxy.Core.Model;
+using Proxy.Core.Models;
 using Proxy.Core.Services;
 
 namespace Proxy.Core;
@@ -13,10 +15,10 @@ public static class Shell
   {
     _serviceCollection = new ServiceCollection();
 
-    _serviceCollection.AddSingleton<EnvironmentService>();
-    _serviceCollection.AddSingleton<JsonService>();
+    _serviceCollection.AddSingleton<IEnvironmentModel, EnvironmentModel>();
+    _serviceCollection.AddSingleton<IJsonService, JsonService>();
     _serviceCollection.AddSingleton<IHttpService, HttpService>();
-    _serviceCollection.AddSingleton<TimerService>();
+    _serviceCollection.AddSingleton<ITimerService, TimerService>();
 
     // Default AWS services?
     // _serviceCollection.AddSingleton<IStorageService, S3StorageService>();

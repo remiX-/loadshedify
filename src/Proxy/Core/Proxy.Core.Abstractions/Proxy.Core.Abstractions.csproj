@@ -6,4 +6,8 @@
     <RootNamespace>Proxy.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.5.14" />
+  </ItemGroup>
+
 </Project>

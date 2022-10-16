@@ -17,6 +17,9 @@ Parameters:
   Environment:
     Type: String
     Description: Stage Name used in API GW
+  BotPublicKey:
+    Type: String
+    Description: Public Key for Discord Bot
   EspAuthToken:
     Type: String
     Description: Auth Token required for EskomSePush Business API 2.0
@@ -29,7 +32,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
-      BucketName: !Sub "${AppIdentifier}v2-${Environment}"
+      BucketName: !Sub ${AppIdentifier}-${Environment}
       Tags:
         - Key: Project
           Value: !Ref AppIdentifier
@@ -39,13 +42,16 @@ Resources:
   MainSNSTopic:
     Type: AWS::SNS::Topic
 
-  proxyGateway:
+  #####################
+  #     API & Bot Proxy
+  #####################
+  ProxyApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Environment
       MethodSettings:
         - ResourcePath: /
-          HttpMethod: ANY
+          HttpMethod: POST
 
   DiscordBotProxyFunction:
     Type: AWS::Serverless::Function
@@ -65,14 +71,53 @@ Resources:
           Type: Api
           Properties:
             Path: /
-            Method: ANY
-            RestApiId: !Ref proxyGateway
+            Method: POST
+            RestApiId: !Ref ProxyApiGateway
       Environment:
         Variables:
-          DEBUG_ENABLED: true
+          DEBUG_ENABLED: false
           TOPIC_ARN: !Ref MainSNSTopic
-          PUBLIC_KEY: ba19504c256c91e3956390a115182e3a6e82f8d2e00044575fdd59821af6264d
+          PUBLIC_KEY: !Ref BotPublicKey
 
+  #####################
+  #     Lambda & SNS Warmer
+  #####################
+  PingPongFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-PingPong
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.PingPong/
+      Handler: Proxy.Command.PingPong::Proxy.Command.PingPongFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - ping
+
+  DiscordBotProxyWarmerEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Keep bot proxy lambda awake
+      ScheduleExpression: rate(5 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ProxyApiGateway}/${Environment}/*/
+          Id: DiscordBotProxyWarmer
+          Input: '{"data":{"name":"ping"}}'
+          HttpParameters:
+            HeaderParameters:
+              app-warm-ping: true
+
+  #####################
+  #     Discord Commands
+  #####################
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -142,7 +187,7 @@ Resources:
                 - status
       Environment:
         Variables:
-          DEBUG_ENABLED: true
+          DEBUG_ENABLED: false
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
@@ -174,4 +219,4 @@ Resources:
 Outputs:
   ProxyGWEndpoint:
     Description: API Gateway endpoint URL to pass to Discord Application Portal
-    Value: !Sub https://${proxyGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/
+    Value: !Sub https://${ProxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/

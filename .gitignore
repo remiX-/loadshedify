@@ -1,10 +1,9 @@
 .aws-sam/
 .old/
-node_modules
-# samconfig.toml
-# template.yaml
+node_modules/
 .env
 
+# VS things
 bin/
 obj/
 .vs/

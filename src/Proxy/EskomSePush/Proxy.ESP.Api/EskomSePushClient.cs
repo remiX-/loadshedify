@@ -9,14 +9,20 @@ namespace Proxy.ESP.Api;
 public class EskomSePushClient : IEskomSePushClient
 {
   private readonly IHttpService _httpService;
+  private readonly IEnvironmentModel _envModel;
   private readonly IVariablesModel _varModel;
   private readonly ILogger<EskomSePushClient> _logger;
 
   private const string ApiUrl = "https://developer.sepush.co.za/business/2.0";
+  private const string EspAuthTokenVar = "ESP_AUTH_TOKEN";
 
-  public EskomSePushClient(IHttpService httpService, IVariablesModel varModel, ILogger<EskomSePushClient> logger)
+  public EskomSePushClient(IHttpService httpService,
+    IEnvironmentModel envModel,
+    IVariablesModel varModel,
+    ILogger<EskomSePushClient> logger)
   {
     _httpService = httpService;
+    _envModel = envModel;
     _varModel = varModel;
     _logger = logger;
   }
@@ -78,6 +84,6 @@ public class EskomSePushClient : IEskomSePushClient
     return _httpService.NewRequest()
       .WithMethod(HttpMethods.Get)
       .WithUrl(ApiUrl)
-      .WithHeader("Token", _varModel.EspAuthToken);
+      .WithHeader("Token", _envModel.Get(EspAuthTokenVar));
   }
 }

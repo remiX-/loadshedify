@@ -9,49 +9,16 @@ namespace Proxy.DiscordProxy;
 public class DiscordHandler
 {
   private readonly IHttpService _httpService;
-  private readonly IJsonService _jsonService;
-  private readonly IVariablesModel _varModel;
+  private readonly IEnvironmentModel _envModel;
   private readonly ILogger<DiscordHandler> _logger;
 
   public DiscordHandler(IHttpService httpService,
-    IJsonService jsonService,
-    IVariablesModel varModel,
+    IEnvironmentModel envModel,
     ILogger<DiscordHandler> logger)
   {
     _httpService = httpService;
-    _jsonService = jsonService;
-    _varModel = varModel;
+    _envModel = envModel;
     _logger = logger;
-  }
-
-  public async Task HandleCallback(string id, string token)
-  {
-    var httpRequest = _httpService.NewRequest();
-
-    // if (interaction.Dev)
-    // {
-    //   httpRequest
-    //     .WithMethod(HttpMethods.Post)
-    //     .WithUrl("https://discord.com/api/v10/interactions", "<interaction_id>", "<interaction_token>", "callback");
-    // }
-    // else
-    // {
-    httpRequest
-      .WithMethod(HttpMethods.Patch)
-      .WithUrl("https://discord.com/api/v10/interactions", id, token, "callback")
-      .WithBody(new
-      {
-        type = 4,
-        data = new
-        {
-          content = "Loading..."
-        }
-      });
-
-    var result = await _httpService.ExecuteAsync<object>(httpRequest.Build());
-    _logger.LogDebug(_jsonService.Serialize(result));
-
-    _logger.LogInformation($"Message callback updated: {result.Result}");
   }
 
   public async Task Handle(DiscordInteraction interaction, EmbedBuilder embed)
@@ -69,8 +36,8 @@ public class DiscordHandler
         .WithFooter(footer =>
         {
           footer.Text = "Developed by remiX";
-          // TODO convert to S3 Service
-          footer.IconUrl = $"https://{_varModel.S3AssetBucket}.s3.eu-west-1.amazonaws.com/assets/images/electricity.png";
+          // TODO convert to S3 Service?
+          footer.IconUrl = $"https://{_envModel.Get("S3_ASSET_BUCKET")}.s3.eu-west-1.amazonaws.com/assets/images/electricity.png";
         });
     }
 

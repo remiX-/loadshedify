@@ -21,13 +21,13 @@ public class HttpService : IHttpService
   {
     var response = await Run(request);
 
-    if (!response.Success)
+    if (!response.Success || response.StatusCode == HttpStatusCode.InternalServerError)
     {
       return new RequestResult<T>
       {
         Success = false,
         Response = response,
-        Error = response.Exception.Message
+        Error = $"{response.Body}: {response.Exception.Message}"
       };
     }
 
@@ -111,7 +111,6 @@ public class HttpService : IHttpService
     try
     {
       _httpClient.DefaultRequestHeaders.Clear();
-
 
       if (request.Headers.Count > 0)
       {

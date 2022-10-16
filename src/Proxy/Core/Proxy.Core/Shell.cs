@@ -40,10 +40,7 @@ public static class Shell
 
       return new VariablesModel
       {
-        AspNetEnvironment = envModel.Get("ASPNETCORE_ENVIRONMENT", false),
-        DebugEnabled = envModel.GetBool("DEBUG_ENABLED", false),
-        EspAuthToken = envModel.Get("ESP_AUTH_TOKEN"),
-        S3AssetBucket = envModel.Get("S3_ASSET_BUCKET"),
+        DebugEnabled = envModel.GetBool("DEBUG_ENABLED", false)
       };
     });
   }

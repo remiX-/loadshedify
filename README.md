@@ -28,7 +28,9 @@ A quick breakdown of this project:
   - create an applcation via [Discord Developer Portal](https://discord.com/developers/applications)
   - NOTE DOWN the `APPLICATION ID`, `PUBLIC KEY` and `BOT TOKEN` (under **Bot**)
 
-## Pre-requisites
+## Setup
+
+### AWS
 
 Once you have all the Tools & CLIs installed. Lets setup a an IAM user quick as we need access to AWS resources.
 
@@ -38,9 +40,7 @@ Once you have that you can continue. Try run `aws iam list-users` to see if it's
 
 ![iam_list-users](docs/images/iam_list-users.png)
 
-## Setup
-
-Now that AWS is setup, the rest of setup for this project should be quite painless which just includes Discord and running the Infrastructure as Code:
+### Discord
 
 - Create an Applcation under Discord Developer Portal: https://discord.com/developers/applications
   - Can name it whatever, this will be the name of your Discord Bot
@@ -54,6 +54,21 @@ Now that AWS is setup, the rest of setup for this project should be quite painle
   - Click the "Reset Token" and note down **BOT_TOKEN**, for eg:
     - **BOT_TOKEN** = MTAzMTYxNDQwNzk5MTYyMzcxMA.GikmU9.JbGHdEID3LxNzvtDI7n3NR2NH2PCgTw1McwD8Y
     - **NOTE:** This value is only shown once, if you forget to copy / lose it you can reset it and retrieve a new one
+- Now head to **OAuth2 -> URL Generator**, add:
+  - Scopes: `applications.command`, `bot`
+  - Bot Permissions (pops up when you tick `bot` as per above): `Send Messages`, `Use Slash Commands`
+  - **Copy the url at the bottom and paste in a new tab**
+
+![discord_bot-url-generator](docs/images/discord_bot-url-generator.png)
+
+![discord_bot-add-to-server](docs/images/discord_bot-add-to-server.png)
+
+### Creating the Infrastructure
+
+Now that AWS and Discord Bot should be setup, we are close the being complete with the setup.
+
+The only thing that remains should be quite painless which is just running the Infrastructure as Code:
+
 - `yarn` / `npm install`
 - make all
 

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.DynamoDBv2;
@@ -14,6 +17,7 @@ using Proxy.Core;
 using Proxy.Core.Services;
 using Proxy.DiscordProxy;
 using Proxy.ESP.Api;
+using Proxy.ESP.Api.Entity;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
 namespace Proxy.Command;
@@ -23,13 +27,12 @@ public class SubscribeFunction
   private readonly IJsonService _jsonService;
   private readonly CommandHandler _commandHandler;
   private readonly IEskomSePushClient _espClient;
+  private readonly SubRepository _subRepo;
 
   private readonly ILogger<SubscribeFunction> _logger;
 
   public SubscribeFunction()
   {
-    Console.WriteLine("SearchFunction.ctor");
-
     Shell.ConfigureServices(collection =>
     {
       collection.AddSingleton<CommandHandler>();
@@ -37,14 +40,15 @@ public class SubscribeFunction
       collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
 
       // AWS
-      // TODO 
       var endpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"));
       collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
+      collection.AddSingleton<IDynamoService, DynamoService>();
+
+      collection.AddSingleton<SubRepository>();
     });
 
-    _jsonService = Shell.Get<IJsonService>();
     _commandHandler = Shell.Get<CommandHandler>();
-    _espClient = Shell.Get<IEskomSePushClient>();
+    _subRepo = Shell.Get<SubRepository>();
 
     _logger = Shell.Get<ILogger<SubscribeFunction>>();
   }
@@ -56,11 +60,50 @@ public class SubscribeFunction
 
   private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
-    var embed = new EmbedBuilder()
-      .WithTitle("COMING SOON!")
-      .WithDescription("Watch this space...")
-      .WithColor(Color.DarkPurple);
+    // var userId = interaction.Member.User.Id;
+    // var channelId = interaction.ChannelId;
+    var subCommand = interaction.Data.Options.First();
+    var areaId = subCommand.Options.First().Value.ToString()!.Trim();
+
+    var embed = new EmbedBuilder();
+    if (subCommand.Name.Equals("add"))
+    {
+      await AddSub(interaction, embed, areaId);
+    }
+    else
+    {
+      embed
+        .WithTitle("Can't remove yet sorry :(");
+    }
 
     return new List<EmbedBuilder> { embed };
   }
+
+  private async Task AddSub(DiscordInteraction interaction, EmbedBuilder embed, string areaId)
+  {
+    var userId = interaction.Member.User.Id;
+    var channelId = interaction.ChannelId;
+
+    var success = await _subRepo.Add(userId, channelId, areaId);
+
+    if (success)
+    {
+      var simMatch = Regex.Match(areaId, @"sim\.(-?\d+)m_(.+)");
+
+      embed
+        .WithTitle("Subscription added")
+        .WithDescription(
+          $"**Area:** {(simMatch.Success ? simMatch.Groups[2] : areaId)}\n" +
+          $"**Type:** {(simMatch.Success ? "Simulated" : "Standard")}"
+        )
+        .WithColor(simMatch.Success ? Color.DarkTeal : Color.Green);
+    }
+    else
+    {
+      embed
+        .WithTitle("You're already subscribed, dummy :)")
+        .WithColor(Color.Red);
+    }
+  }
+
 }

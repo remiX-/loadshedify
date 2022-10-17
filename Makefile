@@ -33,7 +33,7 @@ deploy:
 		--resolve-s3 \
 		--capabilities CAPABILITY_IAM \
 		--no-fail-on-empty-changeset \
-		--parameter-overrides AppIdentifier=$(APP_NAME) Environment=$(APP_ENVIRONMENT) BotPublicKey=$(PUBLIC_KEY) EspAuthToken=$(ESP_AUTH_TOKEN)
+		--parameter-overrides AppIdentifier=$(APP_NAME) Environment=$(APP_ENVIRONMENT) BotPublicKey=$(PUBLIC_KEY) BotToken=$(BOT_TOKEN) EspAuthToken=$(ESP_AUTH_TOKEN)
 
 update_commands:
 	node ./src/scripts/register-commands.mjs

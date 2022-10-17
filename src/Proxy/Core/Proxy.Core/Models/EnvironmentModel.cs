@@ -19,9 +19,16 @@ public class EnvironmentModel : IEnvironmentModel
   public bool GetBool(string key, bool defaultValue)
   {
     var envVar = Environment.GetEnvironmentVariable(key);
-
     if (envVar is null) return defaultValue;
 
     return bool.Parse(envVar);
+  }
+
+  public int GetInt(string key, int defaultValue)
+  {
+    var envVar = Environment.GetEnvironmentVariable(key);
+    if (envVar is null) return defaultValue;
+
+    return int.Parse(envVar);
   }
 }

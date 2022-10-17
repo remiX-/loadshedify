@@ -40,14 +40,15 @@ public class JsonService : IJsonService
     }
   }
 
-  public string Serialize(object obj)
+  public string Serialize(object obj, bool prettify = false)
   {
     try
     {
       return JsonSerializer.Serialize(obj, new JsonSerializerOptions
       {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = prettify
       });
     }
     catch

@@ -11,8 +11,15 @@ public struct AreaScheduleEvent
 
   public DateTimeOffset End { get; init; }
 
+  [JsonIgnore]
+  public bool HasStarted => Start.UtcDateTime <= DateTime.UtcNow;
+
   // [JsonIgnore]
-  // public DateTimeO
+  // public TimeSpan TimeToStart => Start.UtcDateTime - DateTime.UtcNow;
+  //
+  // [JsonIgnore]
+  // public TimeSpan TimeToEnd => End.UtcDateTime - DateTime.UtcNow;
+
 
   [JsonIgnore]
   public int Stage => int.Parse(Regex.Match(Note, @"stage (\d+)", RegexOptions.IgnoreCase).Groups[1].Value);

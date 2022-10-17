@@ -7,5 +7,5 @@ public struct StatusStage
   public string Stage { get; init; }
 
   [JsonPropertyName("stage_start_timestamp")]
-  public DateTime Timestamp { get; init; }
+  public DateTimeOffset Timestamp { get; init; }
 }

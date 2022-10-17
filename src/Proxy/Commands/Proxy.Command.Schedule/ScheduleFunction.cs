@@ -34,8 +34,6 @@ public class ScheduleFunction
 
   public ScheduleFunction()
   {
-    Console.WriteLine("SearchFunction.ctor");
-
     Shell.ConfigureServices(collection =>
     {
       collection.AddSingleton<CommandHandler>();
@@ -146,7 +144,7 @@ public class ScheduleFunction
   {
     var startsIn = ev.Start.UtcDateTime - DateTime.UtcNow;
     var formattedTime = startsIn.Hours > 0
-      ? $"{startsIn.Hours}hours, {startsIn.Minutes} mins"
+      ? $"{startsIn.Hours} hours, {startsIn.Minutes} mins"
       : $"{startsIn.Minutes} mins";
 
     embed.Description += "\n**Status:** All good, woot! For now... :/";

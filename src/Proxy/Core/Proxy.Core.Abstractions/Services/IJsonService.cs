@@ -6,7 +6,7 @@ public interface IJsonService
 
   bool TryDeserialize<T>(string json, out T deserialized);
 
-  string Serialize(object obj);
+  string Serialize(object obj, bool prettify = false);
 
   dynamic DebugObject(object obj);
 }

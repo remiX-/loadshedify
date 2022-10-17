@@ -1,0 +1,5 @@
+Resources:
+  SchedulePoller:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Proxy.Event.SchedulePoller::Proxy.Event.SchedulePollerFunction::FunctionHandler

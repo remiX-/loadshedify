@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -85,8 +86,10 @@ public class StatusFunction
       {
         var nextStage = int.Parse(next.Stage);
 
-        embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM HH:mm"));
-        // embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM HH:mm:ss tt zz"));
+        // var easternZone = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
+        // var today = TimeZoneInfo.ConvertTimeFromUtc(next.Timestamp, easternZone);
+        // embed.AddField($"Stage {nextStage}", next.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+        embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM/yyyy HH:mm"));
       }
     }
 

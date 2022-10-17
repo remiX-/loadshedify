@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
 using Proxy.Core.DataModels.Web;
 using Proxy.Core.Model;
 using Proxy.Core.Services;
@@ -10,14 +11,17 @@ public class DiscordHandler
 {
   private readonly IHttpService _httpService;
   private readonly IEnvironmentModel _envModel;
+  private readonly IJsonService _jsonService;
   private readonly ILogger<DiscordHandler> _logger;
 
   public DiscordHandler(IHttpService httpService,
     IEnvironmentModel envModel,
+    IJsonService jsonService,
     ILogger<DiscordHandler> logger)
   {
     _httpService = httpService;
     _envModel = envModel;
+    _jsonService = jsonService;
     _logger = logger;
   }
 
@@ -62,9 +66,47 @@ public class DiscordHandler
       embeds = embeds.Select(embed => new DiscordEmbed(embed.Build()))
     });
 
-    var result = await _httpService.ExecuteAsync<object>(httpRequest.Build());
+    await _httpService.ExecuteAsync<object>(httpRequest.Build());
 
-    _logger.LogInformation($"Message updated: {result.Result}");
+    _logger.LogInformation("Message updated");
+  }
+
+  public async Task SendMessage(IList<string> userIds, string channelId, IReadOnlyList<EmbedBuilder> embeds)
+  {
+    // Add defaults to embed
+    foreach (var embed in embeds)
+    {
+      embed
+        .WithCurrentTimestamp()
+        .WithFooter(footer =>
+        {
+          footer.Text = "Developed by remiX";
+          // TODO convert to S3 Service?
+          footer.IconUrl = $"https://{_envModel.Get("S3_ASSET_BUCKET")}.s3.eu-west-1.amazonaws.com/assets/images/electricity.png";
+        });
+    }
+
+    var httpRequest = _httpService.NewRequest()
+      .WithMethod(HttpMethods.Post)
+      .WithHeader("Authorization", $"Bot {_envModel.Get("DISCORD_BOT_TOKEN")}")
+      .WithUrl("https://discord.com/api/v10/channels/", channelId, "messages")
+      .WithBody(new
+      {
+        // content = $"<@{userId}>",
+        content = $"{userIds.Select(userId => $"<@{userId}>").Aggregate((c, n) => $"{c} {n}")}",
+        embeds = embeds.Select(embed => new DiscordEmbed(embed.Build()))
+      });
+
+    _logger.LogDebug(_jsonService.Serialize(httpRequest.Build()));
+
+    await _httpService.ExecuteAsync<object>(httpRequest.Build());
+
+    _logger.LogInformation("Message sent");
+  }
+
+  public async Task SendMessage(IList<string> userIds, string channelId, EmbedBuilder embed)
+  {
+    await SendMessage(userIds, channelId, new List<EmbedBuilder> { embed });
   }
 
   public async Task HandleError(DiscordInteraction interaction, string error)
@@ -91,6 +133,6 @@ public class DiscordHandler
 
     var result = await _httpService.ExecuteAsync<object>(httpRequest.Build());
 
-    _logger.LogInformation($"Message updated: {result.Result}");
+    _logger.LogError($"An error occurred: {result.Result}");
   }
 }

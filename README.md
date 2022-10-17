@@ -73,3 +73,9 @@ The only thing that remains should be quite painless which is just running the I
 - make all
 
 This should setup the entire infrastructure
+
+## Videos
+
+For the life of my I couldn't get them to link here...
+
+Please check out `./docs/videos` for detailed Setup & my Demo Submission video :)

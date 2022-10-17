@@ -13,7 +13,7 @@ stack_name = $(APP_NAME)-$(APP_ENVIRONMENT)-stack
 $(info Main Stack:        $(stack_name))
 
 all: validate build deploy artifacts update_commands dev
-dev: dev_files
+dev: gen_dev_files
 q: build deploy
 
 validate:

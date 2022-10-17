@@ -1,5 +1,5 @@
 Resources:
-  Schedule:
+  Help:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler
+      Handler: Proxy.Command.Help::Proxy.Command.HelpFunction::FunctionHandler

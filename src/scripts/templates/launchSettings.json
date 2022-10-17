@@ -8,7 +8,8 @@
       "environmentVariables": {
         "ESP_AUTH_TOKEN": "{{ESP_AUTH_TOKEN}}",
         "S3_ASSET_BUCKET": "{{S3_ASSET_BUCKET}}",
-        "DISCORD_BOT_TOKEN": "{{DISCORD_BOT_TOKEN}}"
+        "DISCORD_BOT_TOKEN": "{{DISCORD_BOT_TOKEN}}",
+        "BOT_DEV_CHANNEL_ID": "{{BOT_DEV_CHANNEL_ID}}"
       }
     }
   }

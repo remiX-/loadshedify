@@ -110,6 +110,52 @@ Resources:
   #####################
   #     Discord Commands
   #####################
+  HelpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Help
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Help/
+      Handler: Proxy.Command.Help::Proxy.Command.HelpFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - help
+      Environment:
+        Variables:
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  StatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Status
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Status/
+      Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - status
+      Environment:
+        Variables:
+          DEBUG_ENABLED: false
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -156,30 +202,6 @@ Resources:
       Environment:
         Variables:
           DEBUG_ENABLED: true
-          ESP_AUTH_TOKEN: !Ref EspAuthToken
-          S3_ASSET_BUCKET: !Ref S3Bucket
-
-  StatusFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AppIdentifier}-Status
-      PackageType: Zip
-      CodeUri: src/Proxy/Commands/Proxy.Command.Status/
-      Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler
-      Runtime: dotnet6
-      Policies:
-        - AWSLambdaBasicExecutionRole
-      Events:
-        SNSEvent:
-          Type: SNS
-          Properties:
-            Topic: !Ref MainSNSTopic
-            FilterPolicy:
-              command:
-                - status
-      Environment:
-        Variables:
-          DEBUG_ENABLED: false
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 

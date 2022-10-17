@@ -3,17 +3,17 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Proxy.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="2.5.0" /> -->
-    <PackageReference Include="Amazon.Lambda.Logging.AspNetCore" Version="3.1.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.5.14" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Proxy.Core.Abstractions\Proxy.Core.Abstractions.csproj" />
+    <ProjectReference Include="..\Proxy.Core.AWS.Dynamo.Abstractions\Proxy.Core.AWS.Dynamo.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

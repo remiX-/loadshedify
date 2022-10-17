@@ -1,9 +1,7 @@
-﻿using Xunit;
-using Amazon.Lambda.Core;
+﻿using Amazon.Lambda.SNSEvents;
 using Amazon.Lambda.TestUtilities;
-using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.SNSEvents;
 using FluentAssertions;
+using Xunit;
 
 namespace Proxy.Command;
 

@@ -26,7 +26,7 @@ public class DiscordEmbed
 
   public EmbedAuthor? Author => _embed.Author;
 
-  public EmbedFooter? Footer => _embed.Footer;
+  public DiscordEmbedFooter Footer { get; }
 
   public EmbedProvider? Provider => _embed.Provider;
 
@@ -37,5 +37,22 @@ public class DiscordEmbed
   public DiscordEmbed(Embed embed)
   {
     _embed = embed;
+
+    if (_embed.Footer.HasValue)
+    {
+      Footer = new DiscordEmbedFooter
+      {
+        Text = _embed.Footer.Value.Text,
+        IconUrl = _embed.Footer.Value.IconUrl
+      };
+    }
+  }
+
+  public class DiscordEmbedFooter
+  {
+    public string Text { get; set; }
+
+    [JsonPropertyName("icon_url")]
+    public string IconUrl { get; set; }
   }
 }

@@ -33,9 +33,10 @@ public class StatusFunction
 
     Shell.ConfigureServices(collection =>
     {
-      collection.AddSingleton<CommandHandler>();
-      collection.AddSingleton<DiscordHandler>();
-      collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
+      collection
+        .WithCommandProxy()
+        .WithEspClient()
+        .WithDiscordHandler();
     });
 
     _commandHandler = Shell.Get<CommandHandler>();

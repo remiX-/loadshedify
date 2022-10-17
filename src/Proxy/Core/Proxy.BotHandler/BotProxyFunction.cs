@@ -2,7 +2,6 @@
 using System.Text;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
-using Amazon.Runtime.Internal;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Microsoft.Extensions.Logging;
@@ -16,7 +15,6 @@ namespace Proxy.BotHandler;
 
 public class BotProxyFunction
 {
-  private readonly IHttpService _httpService;
   private readonly IJsonService _jsonService;
   private readonly IVariablesModel _varModel;
 
@@ -28,7 +26,6 @@ public class BotProxyFunction
 
     Shell.ConfigureServices();
 
-    _httpService = Shell.Get<IHttpService>();
     _jsonService = Shell.Get<IJsonService>();
     _varModel = Shell.Get<IVariablesModel>();
     _logger = Shell.Get<ILogger<BotProxyFunction>>();

@@ -39,7 +39,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Events", "Events", "{4FEC40
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proxy.Event.SchedulePoller", "Events\Proxy.Event.SchedulePoller\Proxy.Event.SchedulePoller.csproj", "{448D5B77-7297-4CCD-B26A-AC7EA173EDE4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proxy.Command.Help", "Commands\Proxy.Command.Help\Proxy.Command.Help.csproj", "{E1E0ED3A-293E-455E-8CB4-B8186D79597F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proxy.Command.Help", "Commands\Proxy.Command.Help\Proxy.Command.Help.csproj", "{E1E0ED3A-293E-455E-8CB4-B8186D79597F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proxy.Core.AWS.Dynamo", "Core\Proxy.Core.AWS.Dynamo\Proxy.Core.AWS.Dynamo.csproj", "{B182DBBF-61D9-4465-8529-5E7E0BCDE194}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Proxy.Core.AWS.Dynamo.Abstractions", "Core\Proxy.Core.AWS.Dynamo.Abstractions\Proxy.Core.AWS.Dynamo.Abstractions.csproj", "{B9CCDB76-4E5A-4952-AD82-5B01D5152250}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -103,6 +107,14 @@ Global
 		{E1E0ED3A-293E-455E-8CB4-B8186D79597F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E1E0ED3A-293E-455E-8CB4-B8186D79597F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E1E0ED3A-293E-455E-8CB4-B8186D79597F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B182DBBF-61D9-4465-8529-5E7E0BCDE194}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B182DBBF-61D9-4465-8529-5E7E0BCDE194}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B182DBBF-61D9-4465-8529-5E7E0BCDE194}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B182DBBF-61D9-4465-8529-5E7E0BCDE194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9CCDB76-4E5A-4952-AD82-5B01D5152250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9CCDB76-4E5A-4952-AD82-5B01D5152250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9CCDB76-4E5A-4952-AD82-5B01D5152250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9CCDB76-4E5A-4952-AD82-5B01D5152250}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +134,8 @@ Global
 		{2074F4C2-491D-4D0E-A28B-78A40CE450B5} = {4FEC4085-0063-4420-8376-EA360BC451EE}
 		{448D5B77-7297-4CCD-B26A-AC7EA173EDE4} = {4FEC4085-0063-4420-8376-EA360BC451EE}
 		{E1E0ED3A-293E-455E-8CB4-B8186D79597F} = {FEDB7E4B-D29F-4768-B008-1BE07AA8E920}
+		{B182DBBF-61D9-4465-8529-5E7E0BCDE194} = {608043E7-2271-4F02-89C8-C8DB86D01E3F}
+		{B9CCDB76-4E5A-4952-AD82-5B01D5152250} = {608043E7-2271-4F02-89C8-C8DB86D01E3F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DA60129F-EEB5-4978-9C3C-5DDF92D79C45}

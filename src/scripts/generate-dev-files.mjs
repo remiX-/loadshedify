@@ -31,7 +31,8 @@ const scriptDir = path.dirname(process.argv[1]);
     const launchSettingOutput = launchSettingTemplate
       .replace("{{DISCORD_BOT_TOKEN}}", process.env.BOT_TOKEN)
       .replace("{{S3_ASSET_BUCKET}}", process.env.APP_NAME + "-" + process.env.APP_ENVIRONMENT)
-      .replace("{{ESP_AUTH_TOKEN}}", process.env.ESP_AUTH_TOKEN);
+      .replace("{{ESP_AUTH_TOKEN}}", process.env.ESP_AUTH_TOKEN)
+      .replace("{{BOT_DEV_CHANNEL_ID}}", process.env.BOT_DEV_CHANNEL_ID);
 
     const lambdaToolsDefaultsOutput = lambdaToolsDefaultsTemplate
       .replace("{{AWS_PROFILE}}", process.env.AWS_PROFILE)

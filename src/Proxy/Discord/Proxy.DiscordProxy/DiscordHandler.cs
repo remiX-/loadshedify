@@ -25,13 +25,20 @@ public class DiscordHandler
     _logger = logger;
   }
 
-  public async Task Handle(DiscordInteraction interaction, EmbedBuilder embed)
-  {
-    await Handle(interaction, new List<EmbedBuilder> { embed });
-  }
-
   public async Task Handle(DiscordInteraction interaction, IReadOnlyList<EmbedBuilder> embeds)
   {
+#if DEBUG
+    if (interaction.Dev)
+    {
+      var devChannelId = _envModel.Get("BOT_DEV_CHANNEL_ID", false);
+      if (devChannelId is not null)
+      {
+        await SendMessage(devChannelId, $"DEV MODE - <@{interaction.Member.User.Id}>", embeds);
+        return;
+      }
+    }
+#endif
+
     // Add defaults to embed
     foreach (var embed in embeds)
     {
@@ -45,33 +52,21 @@ public class DiscordHandler
         });
     }
 
-    var httpRequest = _httpService.NewRequest();
-
-    if (interaction.Dev)
-    {
-      httpRequest
-        .WithMethod(HttpMethods.Post)
-        .WithUrl("https://discord.com/api/webhooks/1029440747482644631/IqUMAzp5APKnzPIL3URskC8KYkvLrgscvdHUYDxPa8VJBdagFqzJTYIpav4C3OiMN3ll");
-    }
-    else
-    {
-      httpRequest
-        .WithMethod(HttpMethods.Patch)
-        .WithUrl("https://discord.com/api/v10/webhooks", interaction.ApplicationId, interaction.Token, "messages/@original");
-    }
-
-    httpRequest.WithBody(new
-    {
-      content = $"<@{interaction.Member.User.Id}>",
-      embeds = embeds.Select(embed => new DiscordEmbed(embed.Build()))
-    });
+    var httpRequest = _httpService.NewRequest()
+      .WithMethod(HttpMethods.Patch)
+      .WithUrl("https://discord.com/api/v10/webhooks", interaction.ApplicationId, interaction.Token, "messages/@original")
+      .WithBody(new
+      {
+        content = $"<@{interaction.Member.User.Id}>",
+        embeds = embeds.Select(embed => new DiscordEmbed(embed.Build()))
+      });
 
     await _httpService.ExecuteAsync<object>(httpRequest.Build());
 
     _logger.LogInformation("Message updated");
   }
 
-  public async Task SendMessage(IList<string> userIds, string channelId, IReadOnlyList<EmbedBuilder> embeds)
+  public async Task SendMessage(string channelId, string content, IReadOnlyList<EmbedBuilder> embeds)
   {
     // Add defaults to embed
     foreach (var embed in embeds)
@@ -92,8 +87,7 @@ public class DiscordHandler
       .WithUrl("https://discord.com/api/v10/channels/", channelId, "messages")
       .WithBody(new
       {
-        // content = $"<@{userId}>",
-        content = $"{userIds.Select(userId => $"<@{userId}>").Aggregate((c, n) => $"{c} {n}")}",
+        content = content,
         embeds = embeds.Select(embed => new DiscordEmbed(embed.Build()))
       });
 
@@ -104,32 +98,32 @@ public class DiscordHandler
     _logger.LogInformation("Message sent");
   }
 
-  public async Task SendMessage(IList<string> userIds, string channelId, EmbedBuilder embed)
+  public async Task SendMessage(string channelId, string content, EmbedBuilder embed)
   {
-    await SendMessage(userIds, channelId, new List<EmbedBuilder> { embed });
+    await SendMessage(channelId, content, new List<EmbedBuilder> { embed });
   }
 
   public async Task HandleError(DiscordInteraction interaction, string error)
   {
-    var httpRequest = _httpService.NewRequest();
-
+#if DEBUG
     if (interaction.Dev)
     {
-      httpRequest
-        .WithMethod(HttpMethods.Post)
-        .WithUrl("https://discord.com/api/webhooks/1029440747482644631/IqUMAzp5APKnzPIL3URskC8KYkvLrgscvdHUYDxPa8VJBdagFqzJTYIpav4C3OiMN3ll");
+      var devChannelId = _envModel.Get("BOT_DEV_CHANNEL_ID", false);
+      if (devChannelId is not null)
+      {
+        await SendMessage(devChannelId, $"DEV MODE - <@{interaction.Member.User.Id}> Oopsie... an error occurred: {error}", new List<EmbedBuilder>());
+        return;
+      }
     }
-    else
-    {
-      httpRequest
-        .WithMethod(HttpMethods.Patch)
-        .WithUrl("https://discord.com/api/v10/webhooks", interaction.ApplicationId, interaction.Token, "messages/@original");
-    }
+#endif
 
-    httpRequest.WithBody(new
-    {
-      content = $"<@{interaction.Member.User.Id}> Oopsie... an error occurred: {error}"
-    });
+    var httpRequest = _httpService.NewRequest()
+        .WithMethod(HttpMethods.Patch)
+        .WithUrl("https://discord.com/api/v10/webhooks", interaction.ApplicationId, interaction.Token, "messages/@original")
+        .WithBody(new
+        {
+          content = $"<@{interaction.Member.User.Id}> Oopsie... an error occurred: {error}"
+        });
 
     var result = await _httpService.ExecuteAsync<object>(httpRequest.Build());
 

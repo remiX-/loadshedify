@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Amazon.Lambda.SNSEvents;
 using Discord;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
 using Proxy.Command.Handler;
 using Proxy.Core;
 using Proxy.Core.Services;
@@ -17,6 +14,7 @@ using Proxy.DiscordProxy;
 using Proxy.DiscordProxy.Extensions;
 using Proxy.ESP.Api;
 using Proxy.ESP.Api.Entity;
+using Proxy.ESP.Api.Extensions;
 using Proxy.ESP.Api.Response;
 
 [assembly: LambdaSerializer(typeof(DefaultLambdaJsonSerializer))]
@@ -30,15 +28,14 @@ public class ScheduleFunction
 
   private readonly ILogger<ScheduleFunction> _logger;
 
-  private const int TimezoneToUse = 2;
-
   public ScheduleFunction()
   {
     Shell.ConfigureServices(collection =>
     {
-      collection.AddSingleton<CommandHandler>();
-      collection.AddSingleton<DiscordHandler>();
-      collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
+      collection
+        .WithCommandProxy()
+        .WithEspClient()
+        .WithDiscordHandler();
     });
 
     _jsonService = Shell.Get<IJsonService>();
@@ -121,34 +118,22 @@ public class ScheduleFunction
   {
     foreach (var ev in events)
     {
-      var eventStarted = ev.Start.UtcDateTime < DateTime.UtcNow;
-
-      if (eventStarted) AddCurrentEvent(embed, ev);
+      if (ev.HasStarted) AddCurrentEvent(embed, ev);
       else AddFutureEvent(embed, ev);
     }
   }
 
   private void AddCurrentEvent(EmbedBuilder embed, AreaScheduleEvent ev)
   {
-    var endsIn = ev.End.UtcDateTime - DateTime.UtcNow;
-    var formattedTime = endsIn.Hours > 0
-      ? $"{endsIn.Hours} hours, {endsIn.Minutes} mins"
-      : $"{endsIn.Minutes} mins";
-
     embed.Description += $"\n**Status:** :( Stage {ev.Stage}";
-    embed.AddEmptyFieldWithName($"ACTIVE Stage {ev.Stage}, ends in {formattedTime}");
+    embed.AddEmptyFieldWithName($"ACTIVE Stage {ev.Stage}, ends in {ev.PrettyTimeToEnd(DateTimeOffset.UtcNow)}");
     embed.WithColor(Color.Red);
   }
 
   private void AddFutureEvent(EmbedBuilder embed, AreaScheduleEvent ev)
   {
-    var startsIn = ev.Start.UtcDateTime - DateTime.UtcNow;
-    var formattedTime = startsIn.Hours > 0
-      ? $"{startsIn.Hours} hours, {startsIn.Minutes} mins"
-      : $"{startsIn.Minutes} mins";
-
     embed.Description += "\n**Status:** All good, woot! For now... :/";
-    embed.AddEmptyFieldWithName($"UPCOMING Stage {ev.Stage}, starts in {formattedTime}");
+    embed.AddEmptyFieldWithName($"UPCOMING Stage {ev.Stage}, starts in {ev.PrettyTimeToStart(DateTimeOffset.UtcNow)}");
     embed.WithColor(Color.Orange);
   }
 

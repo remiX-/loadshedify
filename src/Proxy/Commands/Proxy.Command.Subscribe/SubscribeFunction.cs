@@ -35,14 +35,11 @@ public class SubscribeFunction
   {
     Shell.ConfigureServices(collection =>
     {
-      collection.AddSingleton<CommandHandler>();
-      collection.AddSingleton<DiscordHandler>();
-      collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
-
-      // AWS
-      var endpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"));
-      collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
-      collection.AddSingleton<IDynamoService, DynamoService>();
+      collection
+        .WithCommandProxy()
+        .WithEspClient()
+        .WithDiscordHandler()
+        .WithDynamoDb();
 
       collection.AddSingleton<SubRepository>();
     });
@@ -60,8 +57,6 @@ public class SubscribeFunction
 
   private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
-    // var userId = interaction.Member.User.Id;
-    // var channelId = interaction.ChannelId;
     var subCommand = interaction.Data.Options.First();
     var areaId = subCommand.Options.First().Value.ToString()!.Trim();
 

@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Proxy.Core.Abstractions\Proxy.Core.Abstractions.csproj" />
+    <ProjectReference Include="..\..\Core\Proxy.Core.AWS.Dynamo\Proxy.Core.AWS.Dynamo.csproj" />
     <ProjectReference Include="..\..\Core\Proxy.Core\Proxy.Core.csproj" />
     <ProjectReference Include="..\..\Discord\Proxy.DiscordProxy\Proxy.DiscordProxy.csproj" />
     <ProjectReference Include="..\..\EskomSePush\Proxy.ESP.Api\Proxy.ESP.Api.csproj" />

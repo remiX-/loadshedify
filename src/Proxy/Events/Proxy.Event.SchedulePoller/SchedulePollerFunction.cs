@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Amazon;
-using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
 using Discord;
@@ -29,7 +27,6 @@ public class SchedulePollerFunction
   private readonly IJsonService _jsonService;
   private readonly IDynamoService _dbService;
   private readonly DiscordHandler _discordHandler;
-  private readonly IEnvironmentModel _envModel;
 
   private readonly ILogger<SchedulePollerFunction> _logger;
 
@@ -42,26 +39,23 @@ public class SchedulePollerFunction
   {
     Shell.ConfigureServices(collection =>
     {
-      collection.AddSingleton<DiscordHandler>();
-      collection.AddSingleton<IEskomSePushClient, EskomSePushClient>();
-
-      // AWS
-      var endpoint = RegionEndpoint.GetBySystemName(Environment.GetEnvironmentVariable("AWS_REGION"));
-      collection.AddSingleton<IAmazonDynamoDB>(_ => new AmazonDynamoDBClient(endpoint));
-      collection.AddSingleton<IDynamoService, DynamoService>();
+      collection
+        .WithEspClient()
+        .WithDiscordHandler()
+        .WithDynamoDb();
     });
 
     _espClient = Shell.Get<IEskomSePushClient>();
     _jsonService = Shell.Get<IJsonService>();
     _dbService = Shell.Get<IDynamoService>();
     _discordHandler = Shell.Get<DiscordHandler>();
-    _envModel = Shell.Get<IEnvironmentModel>();
 
     _logger = Shell.Get<ILogger<SchedulePollerFunction>>();
 
     if (_alertThresholdMinutes == 0)
     {
-      _alertThresholdMinutes = _envModel.GetInt("ALERT_THRESHOLD", DefaultAlertThresholdMinutes);
+      var envModel = Shell.Get<IEnvironmentModel>();
+      _alertThresholdMinutes = envModel.GetInt("ALERT_THRESHOLD", DefaultAlertThresholdMinutes);
       _logger.LogDebug($"Setting AlertThreshold: {_alertThresholdMinutes}");
     }
   }
@@ -201,10 +195,10 @@ public class SchedulePollerFunction
           .WithTitle($"ALERT: Active Loadshedding for {areaId}")
           .WithDescription(
             $"**Status:**: Stage {scheduleEvent.Stage} ends in {scheduleEvent.PrettyTimeToEnd(_executionStartTime)}\n" +
-            $"**Start:** {scheduleEvent.Start}\n" +
-            $"**End:** {scheduleEvent.End}"
+            $"**Start:** {scheduleEvent.Start:dd/MM/yyyy HH:mm}\n" +
+            $"**End:** {scheduleEvent.End:dd/MM/yyyy HH:mm}"
           )
-          .WithColor(Color.Gold);
+          .WithColor(Color.Red);
       }
       else
       {
@@ -212,13 +206,14 @@ public class SchedulePollerFunction
           .WithTitle($"ALERT: Upcoming Loadshedding for {areaId}")
           .WithDescription(
             $"**Status:**: Stage {scheduleEvent.Stage} starts in {scheduleEvent.PrettyTimeToStart(_executionStartTime)}\n" +
-            $"**Start:** {scheduleEvent.Start}\n" +
-            $"**End:** {scheduleEvent.End}"
+            $"**Start:** {scheduleEvent.Start:dd/MM/yyyy HH:mm}\n" +
+            $"**End:** {scheduleEvent.End:dd/MM/yyyy HH:mm}"
           )
-          .WithColor(Color.Red);
+          .WithColor(Color.Gold);
       }
 
-      await _discordHandler.SendMessage(userList, channelId, embed);
+      var messageContent = $"{userList.Select(userId => $"<@{userId}>").Aggregate((c, n) => $"{c} {n}")}";
+      await _discordHandler.SendMessage(channelId, messageContent, embed);
     }
     catch (Exception ex)
     {

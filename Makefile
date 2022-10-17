@@ -12,7 +12,8 @@ stack_name = $(APP_NAME)-$(APP_ENVIRONMENT)-stack
 
 $(info Main Stack:        $(stack_name))
 
-all: validate build deploy artifacts
+all: validate build deploy artifacts update_commands dev
+dev: dev_files
 q: build deploy
 
 validate:
@@ -40,6 +41,9 @@ update_commands:
 
 artifacts:
 	node ./src/scripts/uploadAssets.mjs $(APP_NAME)-$(APP_ENVIRONMENT)
+
+gen_dev_files:
+	node ./src/scripts/generate-dev-files.mjs
 
 delete:
 	sam delete \

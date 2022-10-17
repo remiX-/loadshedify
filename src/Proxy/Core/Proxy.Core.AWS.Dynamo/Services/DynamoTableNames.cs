@@ -2,7 +2,7 @@
 
 public class TableNames
 {
-  public static string Sub => "Subscriptions";
+  public static string Sub => Environment.GetEnvironmentVariable("DB_SUB_TABLE");
 }
 
 public class TableNameKeys

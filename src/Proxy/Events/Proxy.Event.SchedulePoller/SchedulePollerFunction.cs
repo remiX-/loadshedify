@@ -62,8 +62,7 @@ public class SchedulePollerFunction
 
   public async Task FunctionHandler(object request, ILambdaContext context)
   {
-    _logger.LogDebug(_jsonService.Serialize(request));
-    _logger.LogDebug(_jsonService.Serialize(context));
+    _logger.LogDebug($"Subscriptions table: {TableNames.Sub}");
 
     // Setup
     _executionStartTime = DateTimeOffset.UtcNow;

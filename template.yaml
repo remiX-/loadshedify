@@ -16,7 +16,7 @@ Parameters:
     Description: Primary identifier for this app, used for naming purposes
   Environment:
     Type: String
-    Description: Stage Name used in API GW
+    Description: Environment Name
   BotPublicKey:
     Type: String
     Description: Public Key for Discord Bot
@@ -50,7 +50,7 @@ Resources:
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
-      TableName: Subscriptions
+      TableName: !Sub ${AppIdentifier}-${Environment}-Subscriptions
       BillingMode: PAY_PER_REQUEST
       ContributorInsightsSpecification:
         Enabled: true
@@ -80,7 +80,7 @@ Resources:
   DiscordBotProxyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-DiscordBotProxy
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-DiscordBotProxy
       PackageType: Zip
       CodeUri: src/Proxy/Core/Proxy.BotHandler
       Handler: Proxy.BotHandler::Proxy.BotHandler.BotProxyFunction::FunctionHandler
@@ -104,16 +104,12 @@ Resources:
           PUBLIC_KEY: !Ref BotPublicKey
 
   #####################
-  #     Lambda & SNS Warmer
-  #####################
-
-  #####################
   #     Discord Commands
   #####################
   HelpFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-Help
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-Help
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Help/
       Handler: Proxy.Command.Help::Proxy.Command.HelpFunction::FunctionHandler
@@ -135,7 +131,7 @@ Resources:
   StatusFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-Status
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-Status
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Status/
       Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler
@@ -159,7 +155,7 @@ Resources:
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-Search
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-Search
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Search/
       Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
@@ -183,7 +179,7 @@ Resources:
   ScheduleFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-Schedule
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-Schedule
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Schedule/
       Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler
@@ -208,7 +204,7 @@ Resources:
   SubscribeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-Subscribe
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-Subscribe
       PackageType: Zip
       CodeUri: src/Proxy/Commands/Proxy.Command.Subscribe/
       Handler: Proxy.Command.Subscribe::Proxy.Command.SubscribeFunction::FunctionHandler
@@ -228,6 +224,7 @@ Resources:
           DEBUG_ENABLED: true
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
+          DB_SUB_TABLE: !Ref SubscriptionsTable
 
   #####################
   #     Event Functions
@@ -235,7 +232,7 @@ Resources:
   PingPongFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-PingPong
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-PingPong
       PackageType: Zip
       CodeUri: src/Proxy/Events/Proxy.Event.PingPong/
       Handler: Proxy.Event.PingPong::Proxy.Event.PingPongFunction::FunctionHandler
@@ -254,7 +251,7 @@ Resources:
   SchedulePollerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub ${AppIdentifier}-SchedulePoller
+      FunctionName: !Sub ${AppIdentifier}-${Environment}-SchedulePoller
       PackageType: Zip
       CodeUri: src/Proxy/Events/Proxy.Event.SchedulePoller/
       Handler: Proxy.Event.SchedulePoller::Proxy.Event.SchedulePollerFunction::FunctionHandler
@@ -269,6 +266,7 @@ Resources:
           DISCORD_BOT_TOKEN: !Ref BotToken
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
+          DB_SUB_TABLE: !Ref SubscriptionsTable
 
   #####################
   #     Event Rules
@@ -340,6 +338,6 @@ Resources:
             Action: sts:AssumeRole
 
 Outputs:
-  ProxyGWEndpoint:
+  DiscordApiGatewayProxyEndpoint:
     Description: API Gateway endpoint URL to pass to Discord Application Portal
     Value: !Sub https://${ProxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/

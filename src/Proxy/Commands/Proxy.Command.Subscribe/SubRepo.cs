@@ -28,25 +28,10 @@ internal class SubRepository
   public async Task<bool> Add(string userId, string channelId, string espAreaId)
   {
     _logger.LogDebug($"Adding subscription for {userId}:{channelId}:{espAreaId}");
+    _logger.LogDebug($"Subscriptions table: {TableNames.Sub}");
 
     var (userExists, userRecord) = await _dbService.GetItem(TableNames.Sub, userId);
 
-    // var rawNewRecord = new AttributeValue
-    // {
-    //   M = new Dictionary<string, AttributeValue>
-    //   {
-    //     {
-    //       guildId,
-    //       new AttributeValue
-    //       {
-    //         M = new Dictionary<string, AttributeValue>
-    //         {
-    //           { channelId, new AttributeValue { SS = new List<string> { espAreaId } } }
-    //         }
-    //       }
-    //     }
-    //   }
-    // };
     var rawNewRecord = new AttributeValue
     {
       M = new Dictionary<string, AttributeValue>
@@ -114,6 +99,7 @@ internal class SubRepository
     return false;
   }
 
+  // TODO lol :)
   // public async Task<List<string>> List(UserSeriesListRequest request)
   // {
   //   try

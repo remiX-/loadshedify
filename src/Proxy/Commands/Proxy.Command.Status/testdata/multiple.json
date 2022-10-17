@@ -1,0 +1,33 @@
+{
+  "status": {
+      "capetown": {
+          "name": "Cape Town",
+          "next_stages": [
+              {
+                  "stage": "2",
+                  "stage_start_timestamp": "2022-10-15T22:00:00+02:00"
+              },
+              {
+                  "stage": "0",
+                  "stage_start_timestamp": "2022-10-16T06:00:00+02:00"
+              },
+              {
+                  "stage": "2",
+                  "stage_start_timestamp": "2022-10-16T14:00:00+02:00"
+              },
+              {
+                  "stage": "0",
+                  "stage_start_timestamp": "2022-10-17T06:00:00+02:00"
+              }
+          ],
+          "stage": "0",
+          "stage_updated": "2022-10-15T14:07:03.544168+02:00"
+      },
+      "eskom": {
+          "name": "South Africa",
+          "next_stages": [],
+          "stage": "2",
+          "stage_updated": "2022-10-15T14:00:54.497305+02:00"
+      }
+  }
+}

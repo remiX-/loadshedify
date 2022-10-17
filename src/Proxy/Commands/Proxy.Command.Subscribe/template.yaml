@@ -1,0 +1,5 @@
+Resources:
+  Subscribe:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Proxy.Command.Subscribe::Proxy.Command.SubscribeFunction::FunctionHandler

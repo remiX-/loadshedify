@@ -1,0 +1,14 @@
+{
+  "name": "search",
+  "type": 1,
+  "description": "Retrieves area information for a specified search criteria, eg \"/search umhlanga\"",
+  "options": [
+    {
+      "name": "area",
+      "description": "Search text",
+      "type": 3,
+      "min_length": 4, 
+      "required": true
+    }
+  ]
+}

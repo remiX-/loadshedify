@@ -1,0 +1,5 @@
+Resources:
+  Status:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler

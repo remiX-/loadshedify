@@ -17,6 +17,12 @@ Parameters:
   Environment:
     Type: String
     Description: Stage Name used in API GW
+  BotPublicKey:
+    Type: String
+    Description: Public Key for Discord Bot
+  BotToken:
+    Type: String
+    Description: Bot Token for Discord Bot
   EspAuthToken:
     Type: String
     Description: Auth Token required for EskomSePush Business API 2.0
@@ -29,33 +35,56 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
-      BucketName: !Sub "${AppIdentifier}v2-${Environment}"
+      BucketName: !Sub ${AppIdentifier}-${Environment}
       Tags:
         - Key: Project
           Value: !Ref AppIdentifier
         - Key: Environment
           Value: !Ref Environment
 
+  #####################
+  #     DynamoDB
+  #####################
+  SubscriptionsTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: Subscriptions
+      BillingMode: PAY_PER_REQUEST
+      ContributorInsightsSpecification:
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      AttributeDefinitions:
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: user_id
+          KeyType: HASH
+
   MainSNSTopic:
     Type: AWS::SNS::Topic
 
-  proxyGateway:
+  #####################
+  #     API & Bot Proxy
+  #####################
+  ProxyApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Environment
       MethodSettings:
         - ResourcePath: /
-          HttpMethod: ANY
+          HttpMethod: POST
 
-  proxyFunction:
+  DiscordBotProxyFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/commands/proxy-function.handler
-      Runtime: nodejs16.x
-      Architectures:
-        - x86_64
-      MemorySize: 128
-      Timeout: 100
+      FunctionName: !Sub ${AppIdentifier}-DiscordBotProxy
+      PackageType: Zip
+      CodeUri: src/Proxy/Core/Proxy.BotHandler
+      Handler: Proxy.BotHandler::Proxy.BotHandler.BotProxyFunction::FunctionHandler
+      Runtime: dotnet6
       Description: A Lambda function that returns a static string.
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -66,48 +95,29 @@ Resources:
           Type: Api
           Properties:
             Path: /
-            Method: ANY
-            RestApiId: !Ref proxyGateway
+            Method: POST
+            RestApiId: !Ref ProxyApiGateway
       Environment:
         Variables:
+          DEBUG_ENABLED: false
           TOPIC_ARN: !Ref MainSNSTopic
-          PUBLIC_KEY: ba19504c256c91e3956390a115182e3a6e82f8d2e00044575fdd59821af6264d
+          PUBLIC_KEY: !Ref BotPublicKey
 
-  # SearchAreaLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     Handler: src/commands/search/search.handler
-  #     Runtime: nodejs16.x
-  #     Architectures:
-  #       - x86_64
-  #     MemorySize: 128
-  #     Timeout: 100
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
-  #     Events:
-  #       SNSEvent:
-  #         Type: SNS
-  #         Properties:
-  #           Topic: !Ref MainSNSTopic
-  #           FilterPolicy:
-  #             command:
-  #               - search
-  #     Environment:
-  #       Variables:
-  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
-  #         S3_ASSET_BUCKET: !Ref S3Bucket
+  #####################
+  #     Lambda & SNS Warmer
+  #####################
 
-  Searchv2Lambda:
+  #####################
+  #     Discord Commands
+  #####################
+  HelpFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${AppIdentifier}-Help
       PackageType: Zip
-      CodeUri: src/Proxy/Commands/Proxy.Command.Search/
-      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
+      CodeUri: src/Proxy/Commands/Proxy.Command.Help/
+      Handler: Proxy.Command.Help::Proxy.Command.HelpFunction::FunctionHandler
       Runtime: dotnet6
-      # Architectures:
-      #   - x86_64
-      # MemorySize: 128
-      # Timeout: 100
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:
@@ -117,40 +127,219 @@ Resources:
             Topic: !Ref MainSNSTopic
             FilterPolicy:
               command:
-                - searchv2
+                - help
       Environment:
         Variables:
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  StatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Status
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Status/
+      Handler: Proxy.Command.Status::Proxy.Command.StatusFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - status
+      Environment:
+        Variables:
+          DEBUG_ENABLED: false
           ESP_AUTH_TOKEN: !Ref EspAuthToken
           S3_ASSET_BUCKET: !Ref S3Bucket
 
-  # InfoLambda:
-  #   Type: AWS::Serverless::Function
-  #   Properties:
-  #     # CodeUri: src/commands
-  #     # Handler: info/search.handler
-  #     Handler: src/commands/info/info.handler
-  #     Runtime: nodejs16.x
-  #     Architectures:
-  #       - x86_64
-  #     MemorySize: 128
-  #     Timeout: 100
-  #     Policies:
-  #       - AWSLambdaBasicExecutionRole
-  #     Events:
-  #       SNSEvent:
-  #         Type: SNS
-  #         Properties:
-  #           Topic: !Ref MainSNSTopic
-  #           FilterPolicy:
-  #             command:
-  #               - info
-  #     Environment:
-  #       Variables:
-  #         ESP_AUTH_TOKEN: !Ref EspAuthToken
-  #         S3_ASSET_BUCKET: !Ref S3Bucket
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Search
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Search/
+      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - search
+      Environment:
+        Variables:
+          DEBUG_ENABLED: true
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
 
+  ScheduleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Schedule
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Schedule/
+      Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - schedule
+                - schedulesim
+      Environment:
+        Variables:
+          DEBUG_ENABLED: true
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  SubscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-Subscribe
+      PackageType: Zip
+      CodeUri: src/Proxy/Commands/Proxy.Command.Subscribe/
+      Handler: Proxy.Command.Subscribe::Proxy.Command.SubscribeFunction::FunctionHandler
+      Runtime: dotnet6
+      Role: !GetAtt SubscribeFunctionRole.Arn
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - subscribe
+                - sub
+      Environment:
+        Variables:
+          DEBUG_ENABLED: true
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  #####################
+  #     Event Functions
+  #####################
+  PingPongFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-PingPong
+      PackageType: Zip
+      CodeUri: src/Proxy/Events/Proxy.Event.PingPong/
+      Handler: Proxy.Event.PingPong::Proxy.Event.PingPongFunction::FunctionHandler
+      Runtime: dotnet6
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref MainSNSTopic
+            FilterPolicy:
+              command:
+                - ping
+
+  SchedulePollerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AppIdentifier}-SchedulePoller
+      PackageType: Zip
+      CodeUri: src/Proxy/Events/Proxy.Event.SchedulePoller/
+      Handler: Proxy.Event.SchedulePoller::Proxy.Event.SchedulePollerFunction::FunctionHandler
+      Runtime: dotnet6
+      Role: !GetAtt SchedulePollerFunctionRole.Arn
+      Timeout: 300
+      MemorySize: 256
+      Environment:
+        Variables:
+          DEBUG_ENABLED: true
+          ALERT_THRESHOLD: 1440
+          DISCORD_BOT_TOKEN: !Ref BotToken
+          ESP_AUTH_TOKEN: !Ref EspAuthToken
+          S3_ASSET_BUCKET: !Ref S3Bucket
+
+  #####################
+  #     Event Rules
+  #####################
+  DiscordBotProxyWarmerEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Keep bot proxy lambda awake
+      ScheduleExpression: rate(5 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !Sub arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ProxyApiGateway}/${Environment}/*/
+          Id: DiscordBotProxyWarmerEvent
+          Input: '{"data":{"name":"ping"}}'
+          HttpParameters:
+            HeaderParameters:
+              app-warm-ping: true
+
+  SchedulePollerEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Polling event for checking for loadshedding updates
+      ScheduleExpression: rate(60 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt SchedulePollerFunction.Arn
+          Id: SchedulePollerEvent
+
+  SchedulePollerEventPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref SchedulePollerFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SchedulePollerEvent.Arn
+
+  #####################
+  #     Roles
+  #####################
+  SubscribeFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+
+  SchedulePollerFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
 
 Outputs:
   ProxyGWEndpoint:
     Description: API Gateway endpoint URL to pass to Discord Application Portal
-    Value: !Sub https://${proxyGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/
+    Value: !Sub https://${ProxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/

@@ -1,0 +1,33 @@
+{
+  "name": "subscribe",
+  "type": 1,
+  "description": "View subscribe commands",
+  "options": [
+    {
+      "name": "add",
+      "description": "Subscribes to a given area for live loadshedding notifications",
+      "type": 1,
+      "options": [
+        {
+          "name": "id",
+          "description": "Id retrieved via /search",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "remove",
+      "description": "Removes yourself from live loadshedding notification",
+      "type": 1,
+      "options": [
+        {
+          "name": "id",
+          "description": "Id retrieved via /search",
+          "type": 3,
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "schedulesim",
+  "type": 1,
+  "description": "Retrieves load shedding schedule for current or specified day",
+  "options": [
+    {
+      "name": "current",
+      "description": "Simulate loadshedding happening right now",
+      "type": 1,
+      "options": [
+        {
+          "name": "id",
+          "description": "Id retrieved via /search",
+          "type": 3,
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "future",
+      "description": "Simulate loadshedding happening in the next hour",
+      "type": 1,
+      "options": [
+        {
+          "name": "id",
+          "description": "Id retrieved via /search",
+          "type": 3,
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+Resources:
+  Schedule:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Proxy.Command.Schedule::Proxy.Command.ScheduleFunction::FunctionHandler

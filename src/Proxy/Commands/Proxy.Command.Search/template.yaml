@@ -1,0 +1,5 @@
+Resources:
+  Search:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Proxy.Command.Search::Proxy.Command.SearchFunction::FunctionHandler

@@ -1,6 +1,11 @@
 .aws-sam/
 .old/
-node_modules
-samconfig.toml
-template.yaml
+node_modules/
 .env
+
+# VS things
+bin/
+obj/
+.vs/
+src/Proxy/**/Properties/launchSettings.json
+src/Proxy/**/aws-lambda-tools-defaults.json

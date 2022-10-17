@@ -1,0 +1,129 @@
+{
+  "resource": "/",
+  "path": "/",
+  "httpMethod": "POST",
+  "headers": {
+    "CloudFront-Forwarded-Proto": "https",
+    "CloudFront-Is-Desktop-Viewer": "true",
+    "CloudFront-Is-Mobile-Viewer": "false",
+    "CloudFront-Is-SmartTV-Viewer": "false",
+    "CloudFront-Is-Tablet-Viewer": "false",
+    "CloudFront-Viewer-ASN": "396982",
+    "CloudFront-Viewer-Country": "US",
+    "content-type": "application/json",
+    "Host": "9dwkv0w5si.execute-api.eu-west-1.amazonaws.com",
+    "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+    "Via": "1.1 4cc685c660795f2a3ffdaa4847751a1c.cloudfront.net (CloudFront)",
+    "X-Amz-Cf-Id": "P1iVnsAbJPuhOZ2S0oQkLN8Nev5Kic5E9PNqcd_Ynso50lmyl86erA==",
+    "X-Amzn-Trace-Id": "Root=1-6348696f-13fdf429552d9f8f5ff919e4",
+    "X-Forwarded-For": "35.227.62.178, 130.176.71.67",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https",
+    "x-signature-ed25519": "fde14b72b1d097b318b661d3dcbd1b12e17db4fb0d3a73e4529bcb221db89584da3bf83066d3450465dfec6bbf4e09993662c71e8b73e40cac0d0fcb73f1b601",
+    "x-signature-timestamp": "1665689967"
+  },
+  "multiValueHeaders": {
+    "CloudFront-Forwarded-Proto": [
+      "https"
+    ],
+    "CloudFront-Is-Desktop-Viewer": [
+      "true"
+    ],
+    "CloudFront-Is-Mobile-Viewer": [
+      "false"
+    ],
+    "CloudFront-Is-SmartTV-Viewer": [
+      "false"
+    ],
+    "CloudFront-Is-Tablet-Viewer": [
+      "false"
+    ],
+    "CloudFront-Viewer-ASN": [
+      "396982"
+    ],
+    "CloudFront-Viewer-Country": [
+      "US"
+    ],
+    "content-type": [
+      "application/json"
+    ],
+    "Host": [
+      "9dwkv0w5si.execute-api.eu-west-1.amazonaws.com"
+    ],
+    "User-Agent": [
+      "Discord-Interactions/1.0 (+https://discord.com)"
+    ],
+    "Via": [
+      "1.1 4cc685c660795f2a3ffdaa4847751a1c.cloudfront.net (CloudFront)"
+    ],
+    "X-Amz-Cf-Id": [
+      "P1iVnsAbJPuhOZ2S0oQkLN8Nev5Kic5E9PNqcd_Ynso50lmyl86erA=="
+    ],
+    "X-Amzn-Trace-Id": [
+      "Root=1-6348696f-13fdf429552d9f8f5ff919e4"
+    ],
+    "X-Forwarded-For": [
+      "35.227.62.178, 130.176.71.67"
+    ],
+    "X-Forwarded-Port": [
+      "443"
+    ],
+    "X-Forwarded-Proto": [
+      "https"
+    ],
+    "x-signature-ed25519": [
+      "fde14b72b1d097b318b661d3dcbd1b12e17db4fb0d3a73e4529bcb221db89584da3bf83066d3450465dfec6bbf4e09993662c71e8b73e40cac0d0fcb73f1b601"
+    ],
+    "x-signature-timestamp": [
+      "1665689967"
+    ]
+  },
+  "queryStringParameters": null,
+  "multiValueQueryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "path": "/dev/",
+    "accountId": "346828392009",
+    "resourceId": "hqs3jtvzn9",
+    "stage": "dev",
+    "requestId": "6e4bf4e2-d48b-4a42-8fe7-d828c8baa186",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "apiKey": null,
+      "apiKeyId": null,
+      "accessKey": null,
+      "sourceIp": "35.227.62.178",
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+      "user": null,
+      "clientCert": null
+    },
+    "resourcePath": "/",
+    "httpMethod": "POST",
+    "apiId": "9dwkv0w5si",
+    "extendedRequestId": "Z9VpbEOLjoEF6Tg=",
+    "connectionId": null,
+    "connectedAt": 0,
+    "domainName": "9dwkv0w5si.execute-api.eu-west-1.amazonaws.com",
+    "domainPrefix": "9dwkv0w5si",
+    "eventType": null,
+    "messageId": null,
+    "routeKey": null,
+    "authorizer": null,
+    "operationName": null,
+    "error": null,
+    "integrationLatency": null,
+    "messageDirection": null,
+    "requestTime": "13/Oct/2022:19:39:27 +0000",
+    "requestTimeEpoch": 1665689967357,
+    "status": null
+  },
+  "body": "{\"app_permissions\":\"1071698665025\",\"application_id\":\"1029079946729095168\",\"channel_id\":\"327289709573308416\",\"data\":{\"id\":\"1029824450880864389\",\"name\":\"searchv2\",\"options\":[{\"name\":\"area\",\"type\":3,\"value\":\"summerstrand\"}],\"type\":1},\"guild_id\":\"327272436577861632\",\"guild_locale\":\"en-US\",\"id\":\"1030203132497645658\",\"locale\":\"en-US\",\"member\":{\"avatar\":null,\"communication_disabled_until\":null,\"deaf\":false,\"flags\":0,\"is_pending\":false,\"joined_at\":\"2017-06-22T02:23:49.312000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"4398046511103\",\"premium_since\":null,\"roles\":[\"327272529775296522\"],\"user\":{\"avatar\":null,\"avatar_decoration\":null,\"discriminator\":\"7065\",\"id\":\"287196978708873216\",\"public_flags\":256,\"username\":\"remiX_ZA\"}},\"token\":\"aW50ZXJhY3Rpb246MTAzMDIwMzEzMjQ5NzY0NTY1ODpyd1Rxd3Y5cnlNeW5EQjVVamZ6dmNMZXNTTVJMb1VENWJJUTQ0bENiREM5TkFBVDVFUmc2Y0ZHZEY5amtyc3ZXME42SFI1NHE2TkdHbmlDTmluaVJJZ2dxRkFXS0hDbDA2RE5hWDFrakl1WkM5S2E5cHROcXA2YVJ2TXUzWE1icA\",\"type\":2,\"version\":1}",
+  "isBase64Encoded": false
+}

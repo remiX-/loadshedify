@@ -1,0 +1,27 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:eu-west-1:346828392009:load-shedding-discord-notifier-dev-stack-MainSNSTopic-tTfXbeuRY7Be:d29a1b13-dac6-4ed9-beb9-e509aa10d141",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "394103fc-9d29-5091-8bfb-583db221dfa5",
+        "TopicArn": "arn:aws:sns:eu-west-1:346828392009:load-shedding-discord-notifier-dev-stack-MainSNSTopic-tTfXbeuRY7Be",
+        "Subject": "Test SNS From Lambda",
+        "Message": "{\"dev\":true,\"app_permissions\":\"1071698665025\",\"application_id\":\"1029079946729095168\",\"channel_id\":\"327289709573308416\",\"data\":{\"id\":\"1030231759406759939\",\"name\":\"subscribe\",\"options\":[{\"name\":\"add\",\"options\":[{\"name\":\"id\",\"type\":3,\"value\":\"nelsonmandelabay-5-summerstranduptomarinehotelarea8\"}],\"type\":1}],\"type\":1},\"guild_id\":\"327272436577861632\",\"guild_locale\":\"en-US\",\"id\":\"1031318711300259890\",\"locale\":\"en-US\",\"member\":{\"avatar\":null,\"communication_disabled_until\":null,\"deaf\":false,\"flags\":0,\"is_pending\":false,\"joined_at\":\"2017-06-22T02:23:49.312000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"4398046511103\",\"premium_since\":null,\"roles\":[\"327272529775296522\"],\"user\":{\"avatar\":null,\"avatar_decoration\":null,\"discriminator\":\"7065\",\"id\":\"287196978708873216\",\"public_flags\":256,\"username\":\"remiX_ZA\"}},\"token\":\"aW50ZXJhY3Rpb246MTAzMTMxODcxMTMwMDI1OTg5MDpQNlg1RE42bWtJaFRHZFdxZ3VaekJvRVhHTEZVQ3F4d0dLM2tMZUd3SWhkdVRaMHZOQjg1djFVTG45SXUwZTh1YW5qT01xOEpRVm04NWJhVUtBdEFnTUJaakUzUURPUndmTVBDeUwwV2FkT01TYVo0SDlCNlBHV1B6R0RpSEIzdQ\",\"type\":2,\"version\":1}",
+        "Timestamp": "2022-10-12T21:08:24.569Z",
+        "SignatureVersion": "1",
+        "Signature": "KzC39v7LgFdZFu3Ka36iyuUy79gaaS1wK9dDSP+DW92X0svNZyPRAW6i8fNhFgSlXV0J9Lu9rPeTg22NRvxRU7A81EcUIibicS4MiHJ4PMGnxHgKJeGbZexgyvk5obOesusGnmJvsh1fhhk6L7AjIsVmusEl8olB5UZeylqwvnD8t97mChRt42Vc+fhlb6d5baRgxWsy0wdMhVBG3WWn6Av9ivw9TjmaFaeZp8EmMHuawQEkPCn9dcPvEpLHnonmEfUD20BLlQY6Z5MhUzCpWXXCxZCCHqZs/RmCFlpOgIKlB65y44wEbB6MlsgDor2IzkGVCx9zZ7lh2k+mnSuHIg==",
+        "SigningCertUrl": "https://sns.eu-west-1.amazonaws.com/SimpleNotificationService-56e67fcb41f6fec09b0196692625d385.pem",
+        "UnsubscribeUrl": "https://sns.eu-west-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:eu-west-1:346828392009:load-shedding-discord-notifier-dev-stack-MainSNSTopic-tTfXbeuRY7Be:d29a1b13-dac6-4ed9-beb9-e509aa10d141",
+        "MessageAttributes": {
+          "command": {
+            "Type": "String",
+            "Value": "searchv2"
+          }
+        }
+      }
+    }
+  ]
+}

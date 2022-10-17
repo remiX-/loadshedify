@@ -1,0 +1,5 @@
+{
+  "name": "status",
+  "type": 1,
+  "description": "Retrieves current load shedding status"
+}

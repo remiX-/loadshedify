@@ -259,6 +259,8 @@ Resources:
       Role: !GetAtt SchedulePollerFunctionRole.Arn
       Timeout: 300
       MemorySize: 256
+      FunctionUrlConfig:
+        AuthType: NONE
       Environment:
         Variables:
           DEBUG_ENABLED: true
@@ -341,3 +343,6 @@ Outputs:
   DiscordApiGatewayProxyEndpoint:
     Description: API Gateway endpoint URL to pass to Discord Application Portal
     Value: !Sub https://${ProxyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/
+  SchedulePollerFunctionUrlEndpoint:
+    Description: Notification alerter Function URL
+    Value: !GetAtt SchedulePollerFunctionUrl.FunctionUrl

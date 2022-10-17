@@ -7,7 +7,5 @@ node_modules/
 bin/
 obj/
 .vs/
-./src/Proxy/**/Properties/launchSettings.json
-./src/Proxy/Commands/Proxy.Command.Status/Properties/launchSettings.json
-command.json
-Makefile
+src/Proxy/**/Properties/launchSettings.json
+src/Proxy/**/aws-lambda-tools-defaults.json

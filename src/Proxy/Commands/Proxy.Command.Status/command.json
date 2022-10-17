@@ -1,6 +1,5 @@
 {
   "name": "status",
-  "aliases": [ "st" ],
   "type": 1,
   "description": "Retrieves current load shedding status"
 }

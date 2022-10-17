@@ -46,36 +46,36 @@ public class HelpFunction
   private async Task<IReadOnlyList<EmbedBuilder>> Action(DiscordInteraction interaction)
   {
 
-    var embeds = new List<InternalEmbedBuilder>();
+    var embeds = new List<EmbedBuilder>();
 
-    // foreach (var (_, status) in statusResponse.Status)
-    // {
-    //   var stage = int.Parse(status.Stage);
-    //   var embed = new EmbedBuilder()
-    //     .WithTitle(status.Name)
-    //     .WithDescription(
-    //       stage == 0
-    //         ? "**No loadshedding!**"
-    //         : $"**Current stage:** {status.Stage}\n**Updated at:** {status.Updated}"
-    //     )
-    //     .WithColor(GetColorForStage(stage));
-    //
-    //   embeds.Add(embed);
-    //
-    //   if (status.NextStages.Count == 0) continue;
-    //
-    //   embed.AddField("Upcoming events below", "Oh noes!");
-    //
-    //   foreach (var next in status.NextStages)
-    //   {
-    //     var nextStage = int.Parse(next.Stage);
-    //
-    //     // var easternZone = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
-    //     // var today = TimeZoneInfo.ConvertTimeFromUtc(next.Timestamp, easternZone);
-    //     // embed.AddField($"Stage {nextStage}", next.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
-    //     embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM/yyyy HH:mm"));
-    //   }
-    // }
+    foreach (var (_, status) in statusResponse.Status)
+    {
+      var stage = int.Parse(status.Stage);
+      var embed = new EmbedBuilder()
+        .WithTitle(status.Name)
+        .WithDescription(
+          stage == 0
+            ? "**No loadshedding!**"
+            : $"**Current stage:** {status.Stage}\n**Updated at:** {status.Updated}"
+        )
+        .WithColor(GetColorForStage(stage));
+    
+      embeds.Add(embed);
+    
+      if (status.NextStages.Count == 0) continue;
+    
+      embed.AddField("Upcoming events below", "Oh noes!");
+    
+      foreach (var next in status.NextStages)
+      {
+        var nextStage = int.Parse(next.Stage);
+    
+        // var easternZone = TimeZoneInfo.FindSystemTimeZoneById("South Africa Standard Time");
+        // var today = TimeZoneInfo.ConvertTimeFromUtc(next.Timestamp, easternZone);
+        // embed.AddField($"Stage {nextStage}", next.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+        embed.AddField($"Stage {nextStage}", next.Timestamp.ToString("dd/MM/yyyy HH:mm"));
+      }
+    }
 
     return embeds;
   }

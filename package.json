@@ -1,24 +1,17 @@
 {
-    "name": "serverless-discord-bot",
-    "description": "Boilerplate for Serverless Discord Bot on AWS using AWS SAM.",
-    "author": "jakjus",
-    "version": "0.0.1",
-    "private": true,
-    "scripts": {
-        "test": "jest"
-    },
-    "dependencies": {
-        "aws-sdk": "2.1231.0",
-        "axios": "0.27.2",
-        "chalk": "5.1.0",
-        "fs-extra": "10.1.0",
-        "globby": "13.1.2",
-        "tweetnacl": "1.0.3",
-        "yaml": "2.1.1"
-    },
-    "devDependencies": {
-        "dotenv": "16.0.1",
-        "jest": "26.6.3",
-        "yaml-cfn": "0.3.1"
-    }
+  "name": "loadshedify",
+  "description": "Discord Bot using Serverless Infrastucture with AWS & EskomSePush API",
+  "author": "remiX_ZA",
+  "version": "1.0.0",
+  "scripts": {},
+  "dependencies": {
+    "aws-sdk": "2.1231.0",
+    "axios": "0.27.2",
+    "chalk": "5.1.0",
+    "fs-extra": "10.1.0",
+    "globby": "13.1.2"
+  },
+  "devDependencies": {
+    "dotenv": "16.0.1"
+  }
 }

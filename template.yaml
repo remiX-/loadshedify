@@ -291,7 +291,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Polling event for checking for loadshedding updates
-      ScheduleExpression: rate(60 minutes)
+      ScheduleExpression: rate(4 hours)
       State: ENABLED
       Targets:
         - Arn: !GetAtt SchedulePollerFunction.Arn

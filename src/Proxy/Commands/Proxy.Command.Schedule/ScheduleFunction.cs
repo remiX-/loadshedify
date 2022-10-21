@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.SystemTextJson;
@@ -116,24 +117,31 @@ public class ScheduleFunction
 
   private void AddEvents(EmbedBuilder embed, IList<AreaScheduleEvent> events)
   {
-    foreach (var ev in events)
+    if (!events.Any()) return;
+
+    var firstEvent = events.First();
+    if (firstEvent.HasStarted) AddCurrentEvent(embed, firstEvent);
+    else AddFutureEvent(embed, firstEvent);
+
+    if (events.Count == 1) return;
+
+    embed.Description += "\n**Future events:**";
+    for (int index = 1; index < events.Count; index++)
     {
-      if (ev.HasStarted) AddCurrentEvent(embed, ev);
-      else AddFutureEvent(embed, ev);
+      var ev = events[index];
+      embed.Description += $"\n**Stage {ev.Stage}** in {ev.PrettyTimeToStart(DateTimeOffset.UtcNow)}";
     }
   }
 
   private void AddCurrentEvent(EmbedBuilder embed, AreaScheduleEvent ev)
   {
-    embed.Description += $"\n**Status:** :( Stage {ev.Stage}";
-    embed.AddEmptyFieldWithName($"ACTIVE Stage {ev.Stage}, ends in {ev.PrettyTimeToEnd(DateTimeOffset.UtcNow)}");
+    embed.Description += $"\n**Status:** :( Stage {ev.Stage} current in affect for another {ev.PrettyTimeToEnd(DateTimeOffset.UtcNow)}\n";
     embed.WithColor(Color.Red);
   }
 
   private void AddFutureEvent(EmbedBuilder embed, AreaScheduleEvent ev)
   {
-    embed.Description += "\n**Status:** All good, woot! For now... :/";
-    embed.AddEmptyFieldWithName($"UPCOMING Stage {ev.Stage}, starts in {ev.PrettyTimeToStart(DateTimeOffset.UtcNow)}");
+    embed.Description += $"\n**Status:** Stage {ev.Stage} starting in {ev.PrettyTimeToStart(DateTimeOffset.UtcNow)}\n";
     embed.WithColor(Color.Orange);
   }
 

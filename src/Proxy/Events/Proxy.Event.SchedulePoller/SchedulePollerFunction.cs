@@ -100,7 +100,10 @@ public class SchedulePollerFunction
 
   }
 
-  private void GetMessageCombinations(IList<DynamoItem> userIdToSubsMap, out Dictionary<string, IList<string>> channelAreaIdToUserIdMap, out IEnumerable<string> uniqueAreaIds)
+  private void GetMessageCombinations(
+    IEnumerable<DynamoItem> userIdToSubsMap,
+    out Dictionary<string, IList<string>> channelAreaIdToUserIdMap,
+    out IEnumerable<string> uniqueAreaIds)
   {
     channelAreaIdToUserIdMap = new Dictionary<string, IList<string>>();
     uniqueAreaIds = new List<string>();
@@ -159,6 +162,10 @@ public class SchedulePollerFunction
           Start = saNow.AddMinutes(simDuration + 1), // Add additional minute for rounding
           End = saNow.AddMinutes(simDuration + 1).AddHours(2)
         }
+      },
+      Info = new AreaScheduleInfo
+      {
+        Name = simAreaId
       }
     };
 
@@ -191,9 +198,11 @@ public class SchedulePollerFunction
       if (scheduleEvent.HasStarted)
       {
         embed
-          .WithTitle($"ALERT: Active Loadshedding for {areaId}")
+          .WithTitle($"ACTIVE: {areaSchedule.Info.Name}")
           .WithDescription(
-            $"**Status:**: Stage {scheduleEvent.Stage} ends in {scheduleEvent.PrettyTimeToEnd(_executionStartTime)}\n" +
+            $"**Status:**: Stage {scheduleEvent.Stage} is currently in affect\n" +
+            $"**Ending in:**: {scheduleEvent.PrettyTimeToEnd(_executionStartTime)}\n" +
+            "\n" +
             $"**Start:** {scheduleEvent.Start:dd/MM/yyyy HH:mm}\n" +
             $"**End:** {scheduleEvent.End:dd/MM/yyyy HH:mm}"
           )
@@ -202,9 +211,11 @@ public class SchedulePollerFunction
       else
       {
         embed
-          .WithTitle($"ALERT: Upcoming Loadshedding for {areaId}")
+          .WithTitle($"UPCOMING: {areaSchedule.Info.Name}")
           .WithDescription(
-            $"**Status:**: Stage {scheduleEvent.Stage} starts in {scheduleEvent.PrettyTimeToStart(_executionStartTime)}\n" +
+            $"**Status:**: Stage {scheduleEvent.Stage} is coming soon\n" +
+            $"**Starting in:**: {scheduleEvent.PrettyTimeToStart(_executionStartTime)}\n" +
+            "\n" +
             $"**Start:** {scheduleEvent.Start:dd/MM/yyyy HH:mm}\n" +
             $"**End:** {scheduleEvent.End:dd/MM/yyyy HH:mm}"
           )

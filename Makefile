@@ -19,7 +19,8 @@ q: build deploy
 validate:
 	sam validate \
 		--profile $(AWS_PROFILE) \
-		--region $(AWS_REGION)
+		--region $(AWS_REGION) \
+		--lint
 
 build:
 	sam build \
@@ -45,7 +46,7 @@ artifacts:
 gen_dev_files:
 	node ./src/scripts/generate-dev-files.mjs
 
-delete:
+destroy:
 	sam delete \
 		--profile $(AWS_PROFILE) \
 		--region $(AWS_REGION) \

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Proxy.Command;
+namespace Proxy.Event;
 
 public class PingPongFunction
 {
